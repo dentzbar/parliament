@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🆘 פרלמנט</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;900&display=swap');
+:root{
+  --sidebar-bg:#1a0a2e;
+  --sidebar-hover:#2d1a4a;
+  --sidebar-active:#3d2a5a;
+  --sidebar-text:#c9b8e8;
+  --sidebar-muted:#7c6a9a;
+  --main-bg:#1c1c1c;
+  --card:#222222;
+  --border:#2e2e2e;
+  --text:#e8e8e8;
+  --muted:#888;
+  --green:#2bac76;
+  --red:#e8003d;
+  --blue:#4a9eff;
+  --amber:#f0b429;
+  --input-bg:#2a2a2a;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Heebo',Arial,sans-serif;background:var(--main-bg);color:var(--text);direction:rtl;height:100vh;display:flex;overflow:hidden;}
+
+/* ── SIDEBAR ── */
+.sidebar{width:240px;background:var(--sidebar-bg);display:flex;flex-direction:column;flex-shrink:0;height:100vh;}
+
+.workspace{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:space-between;}
+.ws-name{font-size:16px;font-weight:900;color:#fff;display:flex;align-items:center;gap:8px;}
+.ws-logo{width:96px;height:96px;border-radius:16px;object-fit:cover;flex-shrink:0;}
+.ws-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:blink 1.5s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+.ws-clock{font-size:11px;color:var(--sidebar-muted);}
+
+.sidebar-scroll{flex:1;overflow-y:auto;padding:8px 0;}
+.sidebar-scroll::-webkit-scrollbar{width:3px;}
+.sidebar-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px;}
+
+.section-header{padding:12px 16px 4px;font-size:11px;font-weight:700;color:var(--sidebar-muted);letter-spacing:1px;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
+.section-header:hover{color:var(--sidebar-text);}
+.add-icon{font-size:16px;font-weight:400;opacity:0.6;}
+.add-icon:hover{opacity:1;}
+
+.nav-item{padding:6px 16px;display:flex;align-items:center;gap:9px;cursor:pointer;border-radius:4px;margin:0 6px;transition:background 0.15s;color:var(--sidebar-text);font-size:14px;font-weight:500;}
+.nav-item:hover{background:var(--sidebar-hover);}
+.nav-item.active{background:var(--sidebar-active);color:#fff;}
+.nav-item .ni-icon{font-size:15px;width:20px;text-align:center;flex-shrink:0;}
+.nav-item .ni-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.nav-item .ni-badge{background:var(--red);color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;min-width:18px;text-align:center;}
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.s-on{background:var(--green);}
+.s-busy{background:var(--red);}
+.s-away{background:var(--amber);}
+
+.sidebar-bottom{padding:12px 14px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px;}
+.me-avatar{width:32px;height:32px;border-radius:6px;background:#4a2080;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0;}
+.me-name{font-size:13px;font-weight:600;color:#fff;}
+.me-status{font-size:11px;color:var(--green);}
+
+/* ── MAIN AREA ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+
+.topbar{padding:0 20px;height:52px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--card);}
+.topbar-title{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700;}
+.topbar-icon{font-size:18px;}
+.topbar-sub{font-size:12px;color:var(--muted);font-weight:400;}
+.topbar-actions{display:flex;gap:8px;align-items:center;}
+.search-wrap{position:relative;}
+.search-input{background:#2a2a2a;border:1px solid var(--border);border-radius:6px;padding:6px 12px 6px 32px;color:var(--text);font-family:'Heebo',Arial,sans-serif;font-size:13px;outline:none;width:200px;transition:border-color 0.15s;}
+.search-input:focus{border-color:#4a4a8a;width:260px;}
+.search-icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none;}
+.search-results{position:absolute;top:calc(100% + 6px);left:0;right:0;background:#1e1e2e;border:1px solid #3a3a5a;border-radius:8px;z-index:150;overflow:hidden;display:none;min-width:280px;box-shadow:0 8px 24px rgba(0,0,0,0.4);}
+.search-results.open{display:block;}
+.sr-group-title{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--muted);padding:8px 12px 4px;text-transform:uppercase;}
+.sr-item{padding:8px 12px;display:flex;align-items:center;gap:9px;cursor:pointer;font-size:13px;transition:background 0.1s;}
+.sr-item:hover{background:rgba(255,255,255,0.06);}
+.sr-item .sri-icon{font-size:15px;width:22px;text-align:center;}
+.sr-item .sri-name{font-weight:600;}
+.sr-item .sri-sub{font-size:11px;color:var(--muted);}
+.sr-empty{padding:14px 12px;color:var(--muted);font-size:13px;text-align:center;}
+.tb-btn{padding:6px 14px;border-radius:6px;border:none;cursor:pointer;font-family:'Heebo',Arial,sans-serif;font-size:13px;font-weight:600;transition:opacity 0.15s;}
+.tb-btn:hover{opacity:0.85;}
+.tb-zoom{background:#1a6cf5;color:#fff;}
+.tb-add{background:var(--sidebar-active);color:#fff;}
+
+/* Content area */
+.content{flex:1;overflow-y:auto;padding:20px;}
+.content::-webkit-scrollbar{width:5px;}
+.content::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+/* Channel: General / Zoom / DM */
+.view{display:none;}
+.view.active{display:block;}
+
+/* Messages view */
+.msg-feed{display:flex;flex-direction:column;gap:2px;}
+.msg-group{display:flex;gap:12px;padding:6px 0;border-radius:6px;padding:8px 10px;}
+.msg-group:hover{background:rgba(255,255,255,0.03);}
+.mg-avatar{width:36px;height:36px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex-shrink:0;margin-top:2px;}
+.mg-body{flex:1;min-width:0;}
+.mg-meta{display:flex;align-items:baseline;gap:8px;margin-bottom:3px;}
+.mg-name{font-size:14px;font-weight:700;}
+.mg-time{font-size:11px;color:var(--muted);}
+.mg-text{font-size:14px;line-height:1.55;word-break:break-word;color:var(--text);}
+.day-divider{display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--muted);font-size:11px;font-weight:600;}
+.day-divider::before,.day-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* Message input */
+.msg-input-area{padding:12px 16px;border-top:1px solid var(--border);flex-shrink:0;background:var(--main-bg);}
+.msg-input-box{background:var(--input-bg);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;gap:8px;padding:8px 12px;transition:border-color 0.15s;}
+.msg-input-box:focus-within{border-color:#4a4a6a;}
+.msg-input-box input{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:'Heebo',Arial,sans-serif;font-size:14px;}
+.msg-input-box input::placeholder{color:var(--muted);}
+.send-btn{background:var(--green);border:none;color:#fff;border-radius:5px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;flex-shrink:0;}
+.send-btn:hover{opacity:0.85;}
+
+/* Zoom view */
+.zoom-view{max-width:600px;}
+.zoom-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:24px;margin-bottom:16px;text-align:center;}
+.zoom-card h2{font-size:20px;font-weight:900;margin-bottom:6px;}
+.zoom-card p{color:var(--muted);font-size:13px;margin-bottom:20px;}
+.zoom-start-btn{display:inline-flex;align-items:center;gap:8px;background:#1a6cf5;color:#fff;border:none;border-radius:8px;padding:12px 28px;font-family:'Heebo',Arial,sans-serif;font-size:15px;font-weight:700;cursor:pointer;}
+.zoom-start-btn:hover{opacity:0.85;}
+.meeting-item{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:14px;margin-bottom:8px;}
+.mi-time{font-size:13px;font-weight:700;color:var(--blue);min-width:44px;}
+.mi-sep{width:1px;height:28px;background:var(--border);}
+.mi-info{flex:1;}
+.mi-title{font-size:14px;font-weight:600;}
+.mi-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+.mi-badge{padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;flex-shrink:0;}
+.b-now{background:rgba(232,0,61,0.15);color:var(--red);border:1px solid var(--red);}
+.b-soon{background:rgba(240,180,41,0.1);color:var(--amber);border:1px solid rgba(240,180,41,0.4);}
+.b-later{background:rgba(136,136,136,0.1);color:var(--muted);border:1px solid var(--border);}
+.join-btn{padding:5px 12px;border-radius:6px;border:none;background:#1a6cf5;color:#fff;font-family:'Heebo',Arial,sans-serif;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;}
+
+/* Contacts view */
+.contacts-view{max-width:700px;}
+.contact-row{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:12px;margin-bottom:8px;transition:border-color 0.15s;}
+.contact-row:hover{border-color:#3d2a5a;}
+.cr-avatar{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;flex-shrink:0;position:relative;}
+.cr-avatar .st{position:absolute;bottom:-2px;right:-2px;width:11px;height:11px;border-radius:50%;border:2px solid var(--card);}
+.cr-info{flex:1;}
+.cr-name{font-size:14px;font-weight:700;}
+.cr-role{font-size:11px;color:var(--muted);}
+.cr-btns{display:flex;gap:6px;}
+.cr-btn{padding:5px 12px;border-radius:6px;border:none;cursor:pointer;font-family:'Heebo',Arial,sans-serif;font-size:12px;font-weight:600;transition:opacity 0.15s;}
+.cr-btn:hover{opacity:0.8;}
+.cr-call{background:#2bac76;color:#fff;}
+.cr-msg{background:var(--sidebar-active);color:#fff;}
+.cr-del{background:transparent;border:1px solid #333;color:#666;}
+.cr-del:hover{background:var(--red);border-color:var(--red);color:#fff;}
+
+/* Modal */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s;}
+.overlay.open{opacity:1;pointer-events:all;}
+.modal{background:#1e1e2e;border:1px solid #3a3a5a;border-radius:12px;padding:24px;width:90%;max-width:400px;transform:translateY(14px);transition:transform 0.2s;}
+.overlay.open .modal{transform:translateY(0);}
+.modal h2{font-size:16px;font-weight:800;margin-bottom:16px;}
+.field{margin-bottom:11px;}
+.field label{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:4px;}
+.field input{width:100%;background:#111;border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);font-family:'Heebo',Arial,sans-serif;font-size:14px;outline:none;}
+.field input:focus{border-color:#4a4a8a;}
+.colors{display:flex;gap:6px;flex-wrap:wrap;}
+.col{width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:all 0.15s;}
+.col.sel{border-color:#fff;transform:scale(1.15);}
+.mbtns{display:flex;gap:8px;margin-top:16px;}
+.mbtn{flex:1;padding:9px;border-radius:7px;border:none;cursor:pointer;font-family:'Heebo',Arial,sans-serif;font-size:14px;font-weight:700;}
+.mbtn.ok{background:#4a2080;color:#fff;}
+.mbtn.cancel{background:#2a2a2a;color:var(--text);}
+
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(70px);background:#2a2a3a;border:1px solid #3a3a5a;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;transition:transform 0.3s;z-index:300;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+@media(max-width:640px){
+  .sidebar{width:200px;}
+  .sidebar-text-hide{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="workspace">
+    <div class="ws-name"><img src="logo.png" alt="פרלמנט" class="ws-logo"/> פרלמנט <div class="ws-dot"></div></div>
+    <div class="ws-clock" id="clock"></div>
+  </div>
+
+  <div class="sidebar-scroll">
+    <!-- Channels -->
+    <div class="section-header">ערוצים <span class="add-icon" onclick="showModal('mmodal')">＋</span></div>
+    <div class="nav-item active" onclick="switchView('zoom',this)" id="nav-zoom">
+      <span class="ni-icon">📹</span><span class="ni-name">שיחות וידאו</span>
+    </div>
+    <div class="nav-item" onclick="switchView('general',this)" id="nav-general">
+      <span class="ni-icon">#</span><span class="ni-name">כללי</span>
+    </div>
+
+    <!-- DMs -->
+    <div class="section-header" style="margin-top:8px">הודעות ישירות <span class="add-icon" onclick="showModal('cmodal')">＋</span></div>
+    <div id="dmList"></div>
+
+    <!-- Contacts -->
+    <div class="section-header" style="margin-top:8px">אנשי קשר</div>
+    <div class="nav-item" onclick="switchView('contacts',this)" id="nav-contacts">
+      <span class="ni-icon">👥</span><span class="ni-name">כל אנשי הקשר</span>
+    </div>
+  </div>
+
+  <div class="sidebar-bottom">
+    <div class="me-avatar">א</div>
+    <div>
+      <div class="me-name">אני</div>
+      <div class="me-status">● פעיל</div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">
+      <span class="topbar-icon" id="topIcon">📹</span>
+      <span id="topTitle">זום ופגישות</span>
+      <span class="topbar-sub" id="topSub"></span>
+    </div>
+    <div class="topbar-actions">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" id="searchInput" placeholder="חפש אנשי קשר, פגישות..." oninput="doSearch(this.value)" onblur="setTimeout(()=>closeSearch(),150)"/>
+        <div class="search-results" id="searchResults"></div>
+      </div>
+      <button class="tb-btn tb-zoom" onclick="openZoom()">📹 שיחה חדשה</button>
+      <button class="tb-btn tb-add" onclick="showModal('cmodal')">+ איש קשר</button>
+    </div>
+  </div>
+
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+
+    <!-- ZOOM VIEW -->
+    <div class="view active content" id="view-zoom">
+      <div class="zoom-view">
+        <div class="zoom-card">
+          <h2>📹 שיחת וידאו</h2>
+          <p>פתח חדר שיחה — שלח את הקישור לאחרים והם יצטרפו ישירות מהדפדפן, בלי להתקין כלום</p>
+          <button class="zoom-start-btn" onclick="openZoom()">▶ פתח שיחה חדשה</button>
+        </div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:10px;">פגישות היום</div>
+        <div id="meetingsList"></div>
+        <button onclick="showModal('mmodal')" style="width:100%;padding:10px;border-radius:7px;border:1px dashed var(--border);background:transparent;color:var(--muted);font-family:'Heebo',Arial,sans-serif;font-size:13px;font-weight:600;cursor:pointer;margin-top:4px;" onmouseover="this.style.borderColor='#4a2080';this.style.color='#c9b8e8'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">+ הוסף פגישה</button>
+      </div>
+    </div>
+
+    <!-- GENERAL VIEW -->
+    <div class="view" id="view-general" style="display:flex;flex-direction:column;">
+      <div class="content msg-feed" id="generalFeed" style="flex:1;"></div>
+      <div class="msg-input-area">
+        <div class="msg-input-box">
+          <input id="generalInput" placeholder="שלח הודעה ל #כללי" onkeydown="if(event.key==='Enter')sendGeneral()"/>
+          <button class="send-btn" onclick="sendGeneral()">↑</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DM VIEW -->
+    <div class="view" id="view-dm" style="display:flex;flex-direction:column;">
+      <div class="content msg-feed" id="dmFeed" style="flex:1;"></div>
+      <div class="msg-input-area">
+        <div class="msg-input-box">
+          <input id="dmInput" placeholder="שלח הודעה..." onkeydown="if(event.key==='Enter')sendDM()"/>
+          <button class="send-btn" onclick="sendDM()">↑</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTACTS VIEW -->
+    <div class="view content" id="view-contacts">
+      <div class="contacts-view" id="contactsList"></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Contact Modal -->
+<div class="overlay" id="cmodal">
+  <div class="modal">
+    <h2>👤 הוסף איש קשר</h2>
+    <div class="field"><label>שם מלא</label><input id="cName" placeholder="ישראל ישראלי"/></div>
+    <div class="field"><label>תפקיד</label><input id="cRole" placeholder="מנהל / יועץ..."/></div>
+    <div class="field"><label>טלפון</label><input id="cPhone" placeholder="050-0000000" type="tel" dir="ltr"/></div>
+    <div class="field"><label>צבע</label><div class="colors" id="colorPicker"></div></div>
+    <div class="mbtns">
+      <button class="mbtn cancel" onclick="hideModal('cmodal')">ביטול</button>
+      <button class="mbtn ok" onclick="addContact()">הוסף</button>
+    </div>
+  </div>
+</div>
+
+<!-- Meeting Modal -->
+<div class="overlay" id="mmodal">
+  <div class="modal">
+    <h2>📅 פגישה חדשה</h2>
+    <div class="field"><label>נושא</label><input id="mTitle" placeholder="ישיבת ועדה..."/></div>
+    <div class="field"><label>שעה</label><input id="mTime" type="time"/></div>
+    <div class="field"><label>משתתפים</label><input id="mPart" placeholder="5 אנשים..."/></div>
+    <div class="field"><label>קישור זום</label><input id="mZoom" placeholder="https://zoom.us/j/..." dir="ltr"/></div>
+    <div class="mbtns">
+      <button class="mbtn cancel" onclick="hideModal('mmodal')">ביטול</button>
+      <button class="mbtn ok" onclick="addMeeting()">הוסף</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const COLORS=['#e8003d','#4a9eff','#2bac76','#ff6d00','#9c27b0','#00bcd4','#f0b429','#607d8b'];
+let selColor=COLORS[0];
+let activeDM=null;
+
+// Clock
+setInterval(()=>{document.getElementById('clock').textContent=new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});updateStatuses();},1000);
+document.getElementById('clock').textContent=new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+
+// Color picker
+document.getElementById('colorPicker').innerHTML=COLORS.map((c,i)=>
+  `<div class="col${i===0?' sel':''}" style="background:${c}" onclick="pickColor('${c}',this)"></div>`
+).join('');
+function pickColor(c,el){selColor=c;document.querySelectorAll('.col').forEach(e=>e.classList.remove('sel'));el.classList.add('sel');}
+
+// ── Data ──
+// contacts + chat messages live in the database (via /api), loaded below.
+// meetings stay client-side (localStorage) — just a local daily agenda.
+let contacts=[];
+let msgs={};            // { [contactId]: [ {text,time,sender} ] }
+let generalMsgs=[];     // [ {text,time,sender} ]
+let meetings=JSON.parse(localStorage.getItem('p_meetings')||'null');
+
+if(!meetings){
+  const h=new Date().getHours();
+  meetings=[
+    {id:1,title:'ישיבת ועדת כספים',time:pad(h)+':00',participants:'8 משתתפים',zoom:'https://zoom.us'},
+    {id:2,title:'סיכום פרויקט',time:pad(h+1)+':30',participants:'5 משתתפים',zoom:''},
+  ];
+  save('p_meetings',meetings);
+}
+
+function pad(n){return String(Math.min(n,23)).padStart(2,'0');}
+function save(k,v){localStorage.setItem(k,JSON.stringify(v));}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function nowTime(){return new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});}
+function fmtTime(ts){return new Date(ts).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});}
+
+// ── API client ──
+async function api(path,opts){
+  const r=await fetch('/api/'+path,{
+    headers:{'Content-Type':'application/json'},
+    ...opts,
+    body:opts&&opts.body?JSON.stringify(opts.body):undefined,
+  });
+  if(!r.ok){
+    let msg='שגיאת שרת';
+    try{msg=(await r.json()).error||msg;}catch{}
+    throw new Error(msg);
+  }
+  return r.json();
+}
+async function loadContacts(){contacts=await api('users');}
+async function loadGeneral(){
+  const rows=await api('messages?channel=general');
+  generalMsgs=rows.map(m=>({text:m.text,time:fmtTime(m.created_at),sender:m.sender}));
+}
+async function loadDM(cid){
+  const rows=await api('messages?channel=dm&user_id='+cid);
+  msgs[cid]=rows.map(m=>({text:m.text,time:fmtTime(m.created_at),sender:m.sender}));
+}
+
+// View switching
+function switchView(name,el){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(v=>{v.style.display='none';v.classList.remove('active');});
+  if(el)el.classList.add('active');
+  const v=document.getElementById('view-'+name);
+  if(v){v.style.display=(name==='general'||name==='dm')?'flex':'block';v.classList.add('active');}
+
+  const icons={zoom:'📹',general:'#',contacts:'👥',dm:'💬'};
+  const titles={zoom:'זום ופגישות',general:'כללי',contacts:'אנשי קשר',dm:activeDM?contacts.find(c=>c.id===activeDM)?.name||'הודעה':''};
+  document.getElementById('topIcon').textContent=icons[name]||'💬';
+  document.getElementById('topTitle').textContent=titles[name]||'';
+  document.getElementById('topSub').textContent='';
+}
+
+// my display name (so friends are told apart in the chat)
+let myName=localStorage.getItem('p_myname');
+if(!myName){myName=(prompt('איך קוראים לך?','אני')||'אני').trim()||'אני';localStorage.setItem('p_myname',myName);}
+function senderColor(s){return s===myName?'#4a2080':(contacts.find(c=>c.name===s)?.color||'#4a9eff');}
+
+// DM
+async function openDM(cid,el){
+  activeDM=cid;
+  switchView('dm',el);
+  const feed=document.getElementById('dmFeed');
+  feed.innerHTML='<div style="color:var(--muted);font-size:13px;padding:20px 10px;">טוען...</div>';
+  document.getElementById('topTitle').textContent=contacts.find(c=>c.id===cid)?.name||'';
+  document.getElementById('topIcon').textContent='💬';
+  try{await loadDM(cid);}catch(e){toast('⚠ '+e.message);}
+  renderDMFeed(cid);
+  setTimeout(()=>document.getElementById('dmInput')?.focus(),100);
+}
+
+function renderDMFeed(cid){
+  const feed=document.getElementById('dmFeed');
+  const cmsgs=msgs[cid]||[];
+  if(!cmsgs.length){feed.innerHTML='<div style="color:var(--muted);font-size:13px;padding:20px 10px;">אין הודעות עדיין. שלח הודעה ראשונה!</div>';return;}
+  feed.innerHTML='<div class="day-divider">היום</div>'+cmsgs.map(m=>msgGroupHtml(m.sender,m.sender[0],senderColor(m.sender),m.text,m.time)).join('');
+  feed.scrollTop=feed.scrollHeight;
+}
+
+async function sendDM(){
+  if(!activeDM)return;
+  const inp=document.getElementById('dmInput');
+  const text=inp.value.trim();if(!text)return;
+  inp.value='';
+  try{
+    await api('messages',{method:'POST',body:{channel:'dm',user_id:activeDM,text,sender:myName}});
+    await loadDM(activeDM);
+    renderDMFeed(activeDM);
+    const prev=document.querySelector(`#dm-${activeDM} .conv-preview`);
+    if(prev)prev.textContent=text.slice(0,22)+(text.length>22?'...':'');
+  }catch(e){toast('⚠ '+e.message);inp.value=text;}
+}
+
+// General
+async function renderGeneral(){
+  const feed=document.getElementById('generalFeed');
+  feed.innerHTML='<div style="color:var(--muted);font-size:13px;padding:20px 10px;">טוען...</div>';
+  try{await loadGeneral();}catch(e){toast('⚠ '+e.message);}
+  if(!generalMsgs.length){feed.innerHTML='<div style="color:var(--muted);font-size:13px;padding:20px 10px;">ברוכים הבאים לפרלמנט 🆘</div>';return;}
+  feed.innerHTML='<div class="day-divider">היום</div>'+generalMsgs.map(m=>msgGroupHtml(m.sender,m.sender[0],senderColor(m.sender),m.text,m.time)).join('');
+  feed.scrollTop=feed.scrollHeight;
+}
+async function sendGeneral(){
+  const inp=document.getElementById('generalInput');
+  const text=inp.value.trim();if(!text)return;
+  inp.value='';
+  try{
+    await api('messages',{method:'POST',body:{channel:'general',text,sender:myName}});
+    await renderGeneral();
+  }catch(e){toast('⚠ '+e.message);inp.value=text;}
+}
+
+function msgGroupHtml(name,initial,color,text,time){
+  return`<div class="msg-group">
+    <div class="mg-avatar" style="background:${color}22;color:${color};border:1px solid ${color}44">${initial}</div>
+    <div class="mg-body">
+      <div class="mg-meta"><span class="mg-name">${esc(name)}</span><span class="mg-time">${time}</span></div>
+      <div class="mg-text">${esc(text)}</div>
+    </div>
+  </div>`;
+}
+
+// Meetings
+function mStatus(t){
+  const n=new Date(),[h,m]=t.split(':').map(Number);
+  const mt=new Date();mt.setHours(h,m,0,0);
+  const d=(mt-n)/60000;
+  if(d<0&&d>-60)return'now';if(d>=0&&d<=15)return'soon';return'later';
+}
+function sLabel(s){return s==='now'?'🔴 עכשיו':s==='soon'?'⏰ בקרוב':'מאוחר יותר';}
+function sClass(s){return s==='now'?'b-now':s==='soon'?'b-soon':'b-later';}
+function updateStatuses(){
+  meetings.forEach(m=>{
+    const el=document.querySelector(`[data-mid="${m.id}"] .mi-badge`);
+    if(!el)return;const s=mStatus(m.time);el.className='mi-badge '+sClass(s);el.textContent=sLabel(s);
+  });
+}
+
+function renderMeetings(){
+  const el=document.getElementById('meetingsList');
+  if(!meetings.length){el.innerHTML='<p style="color:var(--muted);font-size:13px">אין פגישות.</p>';return;}
+  el.innerHTML=meetings.map(m=>{
+    const s=mStatus(m.time);
+    return`<div class="meeting-item" data-mid="${m.id}">
+      <div class="mi-time">${m.time}</div><div class="mi-sep"></div>
+      <div class="mi-info"><div class="mi-title">${esc(m.title)}</div><div class="mi-sub">👥 ${esc(m.participants)}</div></div>
+      <span class="mi-badge ${sClass(s)}">${sLabel(s)}</span>
+      ${m.zoom?`<button class="join-btn" onclick="window.open('${esc(m.zoom)}','_blank')">הצטרף</button>`:''}
+    </div>`;
+  }).join('');
+}
+
+// Contacts list
+function renderContactsList(){
+  const el=document.getElementById('contactsList');
+  if(!contacts.length){el.innerHTML='<p style="color:var(--muted);font-size:13px">אין אנשי קשר.</p>';return;}
+  el.innerHTML=contacts.map(c=>`
+    <div class="contact-row">
+      <div class="cr-avatar" style="background:${c.color}22;color:${c.color};border:1px solid ${c.color}44">
+        ${esc(c.name[0])}
+        <div class="st" style="background:${c.status==='on'?'#2bac76':c.status==='busy'?'#e8003d':'#f0b429'};border-color:var(--card)"></div>
+      </div>
+      <div class="cr-info"><div class="cr-name">${esc(c.name)}</div><div class="cr-role">${esc(c.role)}${c.phone?' · '+c.phone:''}</div></div>
+      <div class="cr-btns">
+        ${c.phone?`<button class="cr-btn cr-call" onclick="callPhone('${c.phone}')">📞 התקשר</button>`:''}
+        <button class="cr-btn cr-msg" onclick="openDMfromContact(${c.id})">💬 הודעה</button>
+        <button class="cr-btn cr-del" onclick="delContact(${c.id})">🗑</button>
+      </div>
+    </div>`).join('');
+}
+
+// Sidebar DM list
+function renderDMList(){
+  const el=document.getElementById('dmList');
+  el.innerHTML=contacts.map(c=>{
+    const cmsgs=msgs[c.id]||[];
+    const preview=cmsgs.length?cmsgs[cmsgs.length-1].text:'';
+    return`<div class="nav-item" id="dm-${c.id}" onclick="openDM(${c.id},this)">
+      <div class="status-dot s-${c.status||'on'}"></div>
+      <span class="ni-name">${esc(c.name)}</span>
+      ${cmsgs.length?`<span class="conv-preview" style="font-size:10px;color:var(--sidebar-muted);max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(preview.slice(0,15))}</span>`:''}
+    </div>`;
+  }).join('');
+}
+
+function openDMfromContact(cid){
+  const el=document.getElementById('dm-'+cid);
+  switchView('contacts',null);
+  openDM(cid,el);
+}
+
+function renderAll(){renderMeetings();renderContactsList();renderDMList();}
+
+// Initial load: pull contacts from the DB, then render everything.
+(async function init(){
+  renderMeetings();
+  try{
+    await loadContacts();
+  }catch(e){toast('⚠ '+e.message);}
+  renderContactsList();
+  renderDMList();
+  renderGeneral();
+})();
+
+function openZoom(){
+  const room='parlment-'+Math.random().toString(36).substring(2,8);
+  const url='https://meet.jit.si/'+room;
+  window.open(url,'_blank');
+  toast('📹 פותח שיחת וידאו...');
+}
+function callPhone(p){window.location.href='tel:'+p.replace(/-/g,'');toast('📞 מתקשר ל-'+p);}
+
+async function addContact(){
+  const name=document.getElementById('cName').value.trim();
+  const role=document.getElementById('cRole').value.trim();
+  const phone=document.getElementById('cPhone').value.trim();
+  if(!name){toast('❗ נא להכניס שם');return;}
+  try{
+    await api('users',{method:'POST',body:{name,role,phone,color:selColor,status:'on'}});
+    await loadContacts();
+    renderContactsList();renderDMList();
+    hideModal('cmodal');
+    ['cName','cRole','cPhone'].forEach(id=>document.getElementById(id).value='');
+    toast('✅ נוסף!');
+  }catch(e){toast('⚠ '+e.message);}
+}
+
+async function delContact(id){
+  try{
+    await api('users?id='+id,{method:'DELETE'});
+    delete msgs[id];
+    await loadContacts();
+    renderContactsList();renderDMList();toast('🗑 נמחק');
+  }catch(e){toast('⚠ '+e.message);}
+}
+
+function addMeeting(){
+  const title=document.getElementById('mTitle').value.trim();
+  const time=document.getElementById('mTime').value;
+  const participants=document.getElementById('mPart').value.trim()||'לא צוין';
+  const zoom=document.getElementById('mZoom').value.trim();
+  if(!title||!time){toast('❗ נא למלא נושא ושעה');return;}
+  meetings.push({id:Date.now(),title,time,participants,zoom});
+  meetings.sort((a,b)=>a.time.localeCompare(b.time));
+  save('p_meetings',meetings);renderMeetings();hideModal('mmodal');
+  ['mTitle','mPart','mZoom'].forEach(id=>document.getElementById(id).value='');
+  toast('✅ פגישה נוספה!');
+}
+
+function showModal(id){document.getElementById(id).classList.add('open');}
+function hideModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+
+// Search
+function doSearch(q){
+  const res=document.getElementById('searchResults');
+  q=q.trim();
+  if(!q){res.classList.remove('open');return;}
+  const cHits=contacts.filter(c=>c.name.includes(q)||c.role.includes(q)||c.phone.includes(q));
+  const mHits=meetings.filter(m=>m.title.includes(q)||m.participants.includes(q));
+  let html='';
+  if(cHits.length){
+    html+=`<div class="sr-group-title">אנשי קשר</div>`;
+    html+=cHits.map(c=>`<div class="sr-item" onclick="searchGoContact(${c.id})">
+      <div class="sri-icon" style="color:${c.color}">●</div>
+      <div><div class="sri-name">${esc(c.name)}</div><div class="sri-sub">${esc(c.role)}${c.phone?' · '+c.phone:''}</div></div>
+    </div>`).join('');
+  }
+  if(mHits.length){
+    html+=`<div class="sr-group-title">פגישות</div>`;
+    html+=mHits.map(m=>`<div class="sr-item" onclick="searchGoMeeting()">
+      <div class="sri-icon">📅</div>
+      <div><div class="sri-name">${esc(m.title)}</div><div class="sri-sub">${m.time} · 👥 ${esc(m.participants)}</div></div>
+    </div>`).join('');
+  }
+  if(!html) html=`<div class="sr-empty">אין תוצאות עבור "${esc(q)}"</div>`;
+  res.innerHTML=html;
+  res.classList.add('open');
+}
+function closeSearch(){
+  document.getElementById('searchResults').classList.remove('open');
+}
+function searchGoContact(cid){
+  document.getElementById('searchInput').value='';
+  closeSearch();
+  const el=document.getElementById('dm-'+cid);
+  openDM(cid,el);
+}
+function searchGoMeeting(){
+  document.getElementById('searchInput').value='';
+  closeSearch();
+  switchView('zoom',document.getElementById('nav-zoom'));
+}
+
+let tt;
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2500);}
+</script>
+</body>
+</html>
