@@ -1,61 +1,47 @@
-import { supabase, send } from './_supabase.js';
+import { sql } from './db.js';
 
-// /api/messages — send & receive chat messages
-//
-// A message belongs either to the "general" channel (channel='general', user_id=null)
-// or to a direct conversation with a contact (channel='dm', user_id=<contact id>).
-//
-//   GET  ?channel=general                 → general channel messages
-//   GET  ?channel=dm&user_id=123          → direct messages with contact 123
-//   POST { channel, user_id?, text, sender }  → send a message
 export default async function handler(req, res) {
   try {
     if (req.method === 'GET') {
-      const channel = req.query.channel || 'general';
-      let query = supabase
-        .from('messages')
-        .select('*')
-        .eq('channel', channel)
-        .order('created_at', { ascending: true });
-
-      if (channel === 'dm') {
-        const userId = req.query.user_id;
-        if (!userId) return send(res, 400, { error: 'missing user_id' });
-        query = query.eq('user_id', userId);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return send(res, 200, data);
+      const contactId = req.query.contact_id;
+      if (!contactId) return res.status(400).json({ error: 'contact_id is required' });
+      const rows = await sql`
+        select * from messages where contact_id = ${contactId} order by created_at asc
+      `;
+      return res.status(200).json(rows);
     }
 
     if (req.method === 'POST') {
-      const { channel, user_id, text, sender } = req.body || {};
-      if (!text || !String(text).trim()) {
-        return send(res, 400, { error: 'הודעה ריקה' });
+      const {
+        contact_id, from_name, type, content, audio_data, duration,
+        file_name, file_size, mime_type, file_data,
+      } = req.body ?? {};
+      if (!contact_id || !from_name) {
+        return res.status(400).json({ error: 'contact_id and from_name are required' });
       }
-      const ch = channel === 'dm' ? 'dm' : 'general';
-      if (ch === 'dm' && !user_id) {
-        return send(res, 400, { error: 'missing user_id' });
-      }
-      const { data, error } = await supabase
-        .from('messages')
-        .insert({
-          channel: ch,
-          user_id: ch === 'dm' ? user_id : null,
-          text: String(text).trim(),
-          sender: sender || 'אני',
-        })
-        .select()
-        .single();
-      if (error) throw error;
-      return send(res, 201, data);
+      const [row] = await sql`
+        insert into messages (contact_id, from_name, type, content, audio_data, duration, file_name, file_size, mime_type, file_data)
+        values (
+          ${contact_id}, ${from_name}, ${type || 'text'}, ${content || null}, ${audio_data || null},
+          ${duration || null}, ${file_name || null}, ${file_size || null}, ${mime_type || null}, ${file_data || null}
+        )
+        returning *
+      `;
+      return res.status(201).json(row);
     }
 
-    res.setHeader('Allow', 'GET, POST');
-    return send(res, 405, { error: 'Method Not Allowed' });
+    if (req.method === 'DELETE') {
+      const id = req.query.id;
+      if (!id) return res.status(400).json({ error: 'missing id' });
+      const [deleted] = await sql`delete from messages where id = ${id} returning id`;
+      if (!deleted) return res.status(404).json({ error: 'message not found' });
+      return res.status(200).json({ ok: true });
+    }
+
+    res.setHeader('Allow', 'GET, POST, DELETE');
+    return res.status(405).json({ error: 'method not allowed' });
   } catch (err) {
     console.error('[messages]', err);
-    return send(res, 500, { error: err.message || 'server error' });
+    return res.status(500).json({ error: err.message || 'server error' });
   }
 }

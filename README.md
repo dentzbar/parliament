@@ -1,53 +1,69 @@
-# 🆘 פרלמנט (Parliament)
+# פרלמנט (Parliament)
 
-צ'אט בין חברים — Hebrew chat app between friends. Deployed on Vercel, data stored in Supabase (PostgreSQL).
+צ'אט בין חברים — Hebrew, RTL WhatsApp-style chat between friends. Contacts, businesses, groups, text/voice/file messages, and a community showcase feed. Deployed on Vercel, data stored in Neon (PostgreSQL).
 
 ## Structure
 
 ```
 parliament/
-├── public/
-│   └── index.html       # The full UI (Hebrew, RTL). Static front-end.
+├── index.html         # The full UI (Hebrew, RTL). Static front-end, no build step.
 ├── api/
-│   ├── _supabase.js     # Shared Supabase client + helpers
-│   ├── users.js         # Serverless function — contacts (GET / POST / DELETE)
-│   └── messages.js      # Serverless function — chat (GET / POST)
-├── schema.sql           # Database tables — run once in Supabase
+│   ├── db.js           # Neon client
+│   ├── contacts.js     # Serverless function — contacts/businesses/groups (GET / POST / PATCH / DELETE)
+│   ├── messages.js      # Serverless function — chat messages (GET / POST / DELETE)
+│   ├── showcase.js      # Serverless function — showcase feed (GET / POST)
+│   └── users.js         # Serverless function — presence / discover (GET / POST)
+├── schema.sql           # Database tables — run once against Neon
 ├── package.json
 └── vercel.json
 ```
 
 ## One-time setup
 
-### 1. Supabase
-1. Create a project at [supabase.com](https://supabase.com).
-2. Open **SQL Editor → New query**, paste [`schema.sql`](schema.sql), and run it.
-3. From **Project Settings → API**, copy:
-   - **Project URL** → `SUPABASE_URL`
-   - **service_role** key → `SUPABASE_SERVICE_ROLE_KEY` (server-side only — keep secret)
+### 1. Neon
+
+1. Create a project at [neon.tech](https://neon.tech) (or reuse an existing one).
+2. Copy the pooled connection string from the Neon dashboard → `DATABASE_URL`.
+3. Run [`schema.sql`](schema.sql) against it once — see **Neon SQL setup** below.
 
 ### 2. Vercel
-1. Import the repo at [vercel.com](https://vercel.com).
-2. Under **Settings → Environment Variables**, add the two values above.
-3. Deploy.
+
+1. Repo is already connected to Vercel (auto-deploy on push to `main`).
+2. Under **Settings → Environment Variables**, set `DATABASE_URL` to the Neon connection string.
+3. Push to `main` to deploy.
 
 ## Local development
 
 ```bash
 npm install
-# put SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in a .env.local file
+# put DATABASE_URL in a .env.local file
 vercel dev
 ```
 
 ## API
 
-| Method | Endpoint | Purpose |
-|--------|----------|---------|
-| `GET`    | `/api/users` | list contacts |
-| `POST`   | `/api/users` | add contact `{ name, role, phone, color, status }` |
-| `DELETE` | `/api/users?id=` | delete contact + their messages |
-| `GET`    | `/api/messages?channel=general` | general channel history |
-| `GET`    | `/api/messages?channel=dm&user_id=` | direct-message history |
-| `POST`   | `/api/messages` | send `{ channel, user_id?, text, sender }` |
+| Method   | Endpoint                        | Purpose |
+|----------|----------------------------------|---------|
+| `GET`    | `/api/contacts`                  | list contacts/businesses/groups |
+| `POST`   | `/api/contacts`                  | create one `{ id, name, status?, is_business?, category?, phone?, description?, is_group?, members?, avatar? }` |
+| `PATCH`  | `/api/contacts`                  | update `{ id, name?, status?, avatar?, background? }` |
+| `DELETE` | `/api/contacts?id=`              | delete contact/group + its messages |
+| `GET`    | `/api/messages?contact_id=`      | message history for a thread |
+| `POST`   | `/api/messages`                  | send `{ contact_id, from_name, type, content?, audio_data?, duration?, file_name?, file_size?, mime_type?, file_data? }` |
+| `DELETE` | `/api/messages?id=`              | delete one message |
+| `GET`    | `/api/showcase`                  | list showcase items |
+| `POST`   | `/api/showcase`                  | add one `{ type, icon?, bg?, image?, title, description?, creator?, likes? }` |
+| `GET`    | `/api/users`                     | list known users (discover) |
+| `POST`   | `/api/users`                     | upsert presence `{ name }` |
 
-Meetings (פגישות) remain a local-only daily agenda in the browser.
+There's no websocket/realtime channel — the frontend polls `/api/messages` and `/api/contacts` on an interval while a chat is open.
+
+## Neon SQL setup
+
+Run this once, either from the Neon Console's SQL editor or from your terminal:
+
+```bash
+psql "$DATABASE_URL" -f schema.sql
+```
+
+This creates the `users`, `contacts`, `messages`, and `showcase` tables (all `create table if not exists`, so it's safe to re-run).
