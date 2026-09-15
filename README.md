@@ -1,6 +1,6 @@
 # פרלמנט (Parliament)
 
-צ'אט בין חברים — Hebrew, RTL WhatsApp-style chat between friends. Contacts, businesses, groups, text/voice/file messages, and a community showcase feed. Deployed on Vercel, data stored in Neon (PostgreSQL).
+צ'אט בין חברים — Hebrew, RTL chat, strictly user-to-user. On entry, pick an existing user or create a new one; message any other user directly with text, voice, or file messages. Includes a community showcase feed. Deployed on Vercel, data stored in Neon (PostgreSQL).
 
 ## Structure
 
@@ -9,10 +9,9 @@ parliament/
 ├── index.html         # The full UI (Hebrew, RTL). Static front-end, no build step.
 ├── api/
 │   ├── db.js           # Neon client
-│   ├── contacts.js     # Serverless function — contacts/businesses/groups (GET / POST / PATCH / DELETE)
-│   ├── messages.js      # Serverless function — chat messages (GET / POST / DELETE)
-│   ├── showcase.js      # Serverless function — showcase feed (GET / POST)
-│   └── users.js         # Serverless function — presence / discover (GET / POST)
+│   ├── users.js         # Serverless function — user directory (GET / POST / PATCH)
+│   ├── messages.js      # Serverless function — direct messages between users (GET / POST / DELETE)
+│   └── showcase.js      # Serverless function — showcase feed (GET / POST)
 ├── schema.sql           # Database tables — run once against Neon
 ├── package.json
 └── vercel.json
@@ -42,21 +41,19 @@ vercel dev
 
 ## API
 
-| Method   | Endpoint                        | Purpose |
-|----------|----------------------------------|---------|
-| `GET`    | `/api/contacts`                  | list contacts/businesses/groups |
-| `POST`   | `/api/contacts`                  | create one `{ id, name, status?, is_business?, category?, phone?, description?, is_group?, members?, avatar? }` |
-| `PATCH`  | `/api/contacts`                  | update `{ id, name?, status?, avatar?, background? }` |
-| `DELETE` | `/api/contacts?id=`              | delete contact/group + its messages |
-| `GET`    | `/api/messages?contact_id=`      | message history for a thread |
-| `POST`   | `/api/messages`                  | send `{ contact_id, from_name, type, content?, audio_data?, duration?, file_name?, file_size?, mime_type?, file_data? }` |
-| `DELETE` | `/api/messages?id=`              | delete one message |
-| `GET`    | `/api/showcase`                  | list showcase items |
-| `POST`   | `/api/showcase`                  | add one `{ type, icon?, bg?, image?, title, description?, creator?, likes? }` |
-| `GET`    | `/api/users`                     | list known users (discover) |
-| `POST`   | `/api/users`                     | upsert presence `{ name }` |
+| Method   | Endpoint                          | Purpose |
+|----------|-------------------------------------|---------|
+| `GET`    | `/api/users`                        | list all users |
+| `POST`   | `/api/users`                        | create/upsert `{ name, avatar? }` — used both on first entry and to bump presence |
+| `PATCH`  | `/api/users`                        | update `{ id, name?, avatar? }` |
+| `GET`    | `/api/messages?user_id=&with_id=`   | message thread between two users |
+| `GET`    | `/api/messages?user_id=`            | conversation list (last message + preview per counterpart) |
+| `POST`   | `/api/messages`                     | send `{ sender_id, recipient_id, type, content?, audio_data?, duration?, file_name?, file_size?, mime_type?, file_data? }` |
+| `DELETE` | `/api/messages?id=`                 | delete one message |
+| `GET`    | `/api/showcase`                     | list showcase items |
+| `POST`   | `/api/showcase`                     | add one `{ type, icon?, bg?, image?, title, description?, creator?, likes? }` |
 
-There's no websocket/realtime channel — the frontend polls `/api/messages` and `/api/contacts` on an interval while a chat is open.
+There's no websocket/realtime channel — the frontend polls `/api/messages` and `/api/users` on an interval while the app is open.
 
 ## Neon SQL setup
 
@@ -66,4 +63,4 @@ Run this once, either from the Neon Console's SQL editor or from your terminal:
 psql "$DATABASE_URL" -f schema.sql
 ```
 
-This creates the `users`, `contacts`, `messages`, and `showcase` tables (all `create table if not exists`, so it's safe to re-run).
+This creates the `users`, `messages`, and `showcase` tables (all `create table if not exists`, so it's safe to re-run).

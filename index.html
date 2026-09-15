@@ -77,6 +77,23 @@ body{
   background:linear-gradient(135deg,var(--red-bright),var(--red)); color:#fff; font-family:var(--font-display);
   font-weight:600; font-size:15px; letter-spacing:.5px; cursor:pointer;
 }
+.ob-user-list{
+  width:100%; max-width:300px; max-height:200px; overflow-y:auto;
+  display:flex; flex-direction:column; gap:6px; margin-bottom:18px;
+}
+.ob-user-list:empty{display:none;}
+.ob-user-row{
+  display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:12px;
+  background:var(--panel); border:1px solid var(--line); cursor:pointer; text-align:right;
+}
+.ob-user-row:hover{border-color:var(--red-bright);}
+.ob-user-row .avatar{width:34px; height:34px; font-size:14px;}
+.ob-user-row .ob-user-name{font-size:14px; font-weight:600;}
+.ob-divider{
+  width:100%; max-width:300px; display:flex; align-items:center; gap:10px;
+  color:var(--text-faint); font-size:12px; margin-bottom:14px;
+}
+.ob-divider::before, .ob-divider::after{content:''; flex:1; height:1px; background:var(--line);}
 
 /* ---------- HEADER (contacts screen) ---------- */
 .topbar{
@@ -118,7 +135,6 @@ body{
 
 /* ---------- CONTACT LIST ---------- */
 #contactList{flex:1; overflow-y:auto; padding:2px 10px 160px;}
-#discoverList{flex:1; overflow-y:auto; padding:2px 10px 20px;}
 #allFilesBody{flex:1; overflow-y:auto; padding:10px 14px 20px;}
 .folder-row{
   display:flex; align-items:center; gap:12px; padding:12px 8px; border-radius:14px; cursor:pointer;
@@ -148,20 +164,8 @@ body{
 }
 .contact-info{flex:1; min-width:0;}
 .contact-name{font-family:var(--font-display); font-weight:600; font-size:15.5px; margin-bottom:2px;}
-.biz-badge{
-  display:inline-flex; align-items:center; gap:3px; font-size:10px; font-weight:700; padding:2px 7px;
-  border-radius:8px; background:rgba(224,21,21,.18); color:var(--red-bright); margin-right:6px; vertical-align:middle;
-}
-.group-badge{
-  display:inline-flex; align-items:center; gap:3px; font-size:10px; font-weight:700; padding:2px 7px;
-  border-radius:8px; background:rgba(120,120,255,.15); color:#9aa8ff; margin-right:6px; vertical-align:middle;
-}
 .contact-preview{font-size:13px; color:var(--text-faint); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 .contact-meta{display:flex; flex-direction:column; align-items:flex-end; gap:5px; flex-shrink:0;}
-.switch-user-btn{
-  width:34px; height:34px; border-radius:50%; background:var(--panel); border:1px solid var(--line);
-  color:var(--text-dim); font-size:15px; cursor:pointer; flex-shrink:0; display:flex; align-items:center; justify-content:center;
-}
 .contact-time{font-size:11px; color:var(--text-faint);}
 .unread-badge{
   min-width:19px; height:19px; padding:0 5px; border-radius:10px; background:var(--red-bright);
@@ -223,8 +227,6 @@ body{
 .info-action-btn .circle svg{width:19px; height:19px;}
 .info-section{padding:16px 18px; border-top:1px solid var(--line);}
 .info-section-title{font-size:12.5px; color:var(--text-faint); margin-bottom:10px; letter-spacing:.3px;}
-.info-members-row{display:flex; align-items:center; gap:10px; padding:7px 0;}
-.info-members-row .avatar{width:32px; height:32px; font-size:12px;}
 .info-media-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:6px;}
 .info-media-grid a{display:block; aspect-ratio:1; border-radius:8px; overflow:hidden;}
 .info-media-grid img{width:100%; height:100%; object-fit:cover; display:block;}
@@ -395,11 +397,11 @@ body{
 .call-btn.end{background:var(--red-bright); width:70px; height:70px;}
 .call-btn.active{background:#fff; color:#a80000;}
 
-/* ---------- NEW CHAT MODAL ---------- */
-#newChatModal, #shareWorkModal, #editContactModal, #newBusinessModal, #newGroupModal, #myProfileModal{
+/* ---------- MODALS (SHEETS) ---------- */
+#shareWorkModal, #myProfileModal{
   position:absolute; inset:0; z-index:55; display:none; align-items:flex-end; background:rgba(0,0,0,.55);
 }
-#newChatModal.show, #shareWorkModal.show, #editContactModal.show, #newBusinessModal.show, #newGroupModal.show, #myProfileModal.show{display:flex;}
+#shareWorkModal.show, #myProfileModal.show{display:flex;}
 .sheet{
   width:100%; background:var(--panel); border-radius:22px 22px 0 0; padding:22px 20px 30px;
   animation:sheetup .28s ease;
@@ -417,19 +419,6 @@ body{
 .sheet-buttons button{flex:1; padding:13px; border-radius:13px; border:none; font-family:var(--font-display); font-weight:600; font-size:14px; cursor:pointer;}
 .sheet-buttons .cancel{background:var(--panel2); color:var(--text-dim);}
 .sheet-buttons .confirm{background:linear-gradient(135deg,var(--red-bright),var(--red)); color:#fff;}
-.delete-contact-btn{
-  width:100%; margin-top:12px; padding:13px; border-radius:13px; border:1px solid rgba(255,80,80,.3);
-  background:transparent; color:var(--red-bright); font-family:var(--font-body); font-size:13.5px; cursor:pointer;
-}
-
-.group-members-label{font-size:12.5px; color:var(--text-faint); margin:2px 2px 8px;}
-.group-members-list{max-height:180px; overflow-y:auto; display:flex; flex-direction:column; gap:2px; margin-bottom:10px;}
-.group-member-row{display:flex; align-items:center; gap:10px; padding:8px 6px; border-radius:10px; cursor:pointer;}
-.group-member-row:active{background:var(--panel2);}
-.group-member-row .avatar{width:34px; height:34px; font-size:13px;}
-.group-member-row .gm-name{flex:1; font-size:14px;}
-.group-member-row input[type="checkbox"]{width:18px; height:18px; accent-color:var(--red-bright); flex-shrink:0;}
-.group-members-empty{font-size:12.5px; color:var(--text-faint); padding:8px 2px;}
 
 .gallery-btn{
   width:100%; display:flex; align-items:center; justify-content:center; gap:8px;
@@ -492,8 +481,10 @@ body{
       <defs><linearGradient id="g1" x1="0" y1="0" x2="512" y2="512"><stop stop-color="#e01515"/><stop offset="1" stop-color="#5c0000"/></linearGradient></defs>
     </svg>
     <h1>ברוכים הבאים לפרלמנט</h1>
-    <p>איך קוראים לך? כך יראו אותך שאר המשתמשים בשיחות.</p>
-    <input id="obName" type="text" placeholder="השם שלך" maxlength="20">
+    <p>בחר/י את עצמך מהרשימה, או הקלד/י שם חדש כדי להצטרף.</p>
+    <div id="obUserList" class="ob-user-list"></div>
+    <div id="obDivider" class="ob-divider" style="display:none;">או</div>
+    <input id="obName" type="text" placeholder="שם חדש" maxlength="20">
     <button id="obStart">בואו נתחיל</button>
   </div>
 
@@ -508,9 +499,6 @@ body{
       </svg>
       <h1>פרלמנט</h1>
       <div class="icon-btn emoji-btn" id="btnAllFiles">📁</div>
-      <div class="icon-btn emoji-btn" id="btnDiscoverUsers">🧑‍🤝‍🧑</div>
-      <div class="icon-btn emoji-btn" id="btnNewGroup">👥</div>
-      <div class="icon-btn emoji-btn" id="btnNewBusiness">🏢</div>
       <div class="icon-btn emoji-btn" id="btnShowcase">🎛️</div>
       <div class="icon-btn" id="btnNotifPerm">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
@@ -523,7 +511,7 @@ body{
     <div class="search-wrap">
       <div class="search-box">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-        <input id="searchInput" type="text" placeholder="חיפוש איש קשר">
+        <input id="searchInput" type="text" placeholder="חיפוש משתמש">
       </div>
     </div>
     <div id="contactList"></div>
@@ -533,9 +521,6 @@ body{
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="9" r="1.7"/><path d="M21 15l-5-5-9 9"/></svg>
       </button>
     </div>
-    <button class="fab" id="btnNewChat">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-    </button>
   </div>
 
   <!-- SCREENS STACK (chat overlays contacts) -->
@@ -556,9 +541,6 @@ body{
           </div>
           <div class="icon-btn" id="btnVoiceCall">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.1-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.7a2 2 0 0 1-.5 2.1L7.9 9.9a16 16 0 0 0 6 6l1.4-1.3a2 2 0 0 1 2.1-.5c.9.3 1.8.5 2.7.6a2 2 0 0 1 1.7 2z"/></svg>
-          </div>
-          <div class="icon-btn" id="btnEditContact">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
           </div>
           <div class="icon-btn" id="btnChatBg" title="רקע לשיחה">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
@@ -607,19 +589,6 @@ body{
       </button>
     </div>
 
-    <div class="screen" id="discoverScreen">
-      <div class="chat-header">
-        <div class="icon-btn" id="btnDiscoverBack">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-        </div>
-        <div class="chat-header-info">
-          <div class="chat-header-name">אנשים באפליקציה 🧑‍🤝‍🧑</div>
-          <div class="chat-header-status">כל מי שהשתמש/ה בפרלמנט</div>
-        </div>
-      </div>
-      <div id="discoverList"></div>
-    </div>
-
     <div class="screen" id="allFilesScreen">
       <div class="chat-header">
         <div class="icon-btn" id="btnAllFilesBack">
@@ -639,7 +608,7 @@ body{
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
         </div>
         <div class="chat-header-info">
-          <div class="chat-header-name">פרטים</div>
+          <div class="chat-header-name">פרטי משתמש</div>
         </div>
       </div>
       <div id="contactInfoBody"></div>
@@ -676,27 +645,6 @@ body{
         <button class="call-btn" id="btnAcceptCall" style="background:#2fd15b;">
           <svg viewBox="0 0 24 24" fill="#fff"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.1-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.7a2 2 0 0 1-.5 2.1L7.9 9.9a16 16 0 0 0 6 6l1.4-1.3a2 2 0 0 1 2.1-.5c.9.3 1.8.5 2.7.6a2 2 0 0 1 1.7 2z"/></svg>
         </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- NEW CHAT MODAL -->
-  <div id="newChatModal">
-    <div class="sheet">
-      <h2>איש קשר חדש</h2>
-      <input id="ncAvatarFile" type="file" accept="image/*" class="visually-hidden-input">
-      <div id="ncAvatarPreviewWrap" class="img-preview-wrap round" style="display:none;">
-        <img id="ncAvatarPreview" alt="תצוגה מקדימה">
-        <button type="button" id="ncAvatarRemove" class="img-preview-remove">✕</button>
-      </div>
-      <button type="button" id="ncAvatarBtn" class="gallery-btn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="9" r="1.7"/><path d="M21 15l-5-5-9 9"/></svg>
-        <span>בחירת תמונה (אופציונלי)</span>
-      </button>
-      <input id="newContactName" type="text" placeholder="שם איש הקשר" maxlength="20">
-      <div class="sheet-buttons">
-        <button class="cancel" id="ncCancel">ביטול</button>
-        <button class="confirm" id="ncConfirm">הוספה</button>
       </div>
     </div>
   </div>
@@ -749,82 +697,6 @@ body{
     </div>
   </div>
 
-  <!-- EDIT CONTACT MODAL -->
-  <div id="editContactModal">
-    <div class="sheet">
-      <h2>עריכת איש קשר</h2>
-      <input id="editAvatarFile" type="file" accept="image/*" class="visually-hidden-input">
-      <div id="editAvatarPreviewWrap" class="img-preview-wrap round" style="display:none;">
-        <img id="editAvatarPreview" alt="תצוגה מקדימה">
-        <button type="button" id="editAvatarRemove" class="img-preview-remove">✕</button>
-      </div>
-      <button type="button" id="editAvatarBtn" class="gallery-btn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="9" r="1.7"/><path d="M21 15l-5-5-9 9"/></svg>
-        <span>שינוי תמונה</span>
-      </button>
-      <input id="editContactName" type="text" placeholder="שם" maxlength="20">
-      <input id="editContactStatus" type="text" placeholder="סטטוס (למשל: מחובר/ת)" maxlength="30">
-      <div class="sheet-buttons">
-        <button class="cancel" id="ecCancel">ביטול</button>
-        <button class="confirm" id="ecConfirm">שמירה</button>
-      </div>
-      <button class="delete-contact-btn" id="ecDelete">מחיקת שיחה</button>
-    </div>
-  </div>
-
-  <!-- NEW BUSINESS MODAL -->
-  <div id="newBusinessModal">
-    <div class="sheet">
-      <h2>פתיחת עסק חדש 🏢</h2>
-      <input id="bizLogoFile" type="file" accept="image/*" class="visually-hidden-input">
-      <div id="bizLogoPreviewWrap" class="img-preview-wrap round" style="display:none;">
-        <img id="bizLogoPreview" alt="תצוגה מקדימה">
-        <button type="button" id="bizLogoRemove" class="img-preview-remove">✕</button>
-      </div>
-      <button type="button" id="bizLogoBtn" class="gallery-btn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="9" r="1.7"/><path d="M21 15l-5-5-9 9"/></svg>
-        <span>לוגו העסק (אופציונלי)</span>
-      </button>
-      <input id="bizName" type="text" placeholder="שם העסק" maxlength="30">
-      <select id="bizCategory">
-        <option value="מסעדה">🍽️ מסעדה</option>
-        <option value="חנות">🛍️ חנות</option>
-        <option value="שירותים">🛠️ שירותים</option>
-        <option value="בריאות ויופי">💇 בריאות ויופי</option>
-        <option value="אחר">🏷️ אחר</option>
-      </select>
-      <input id="bizPhone" type="tel" placeholder="טלפון ליצירת קשר" maxlength="20">
-      <textarea id="bizDesc" placeholder="על העסק בכמה מילים..." maxlength="140" rows="3"></textarea>
-      <div class="sheet-buttons">
-        <button class="cancel" id="bizCancel">ביטול</button>
-        <button class="confirm" id="bizConfirm">פתיחת עסק</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- NEW GROUP MODAL -->
-  <div id="newGroupModal">
-    <div class="sheet">
-      <h2>קבוצה חדשה 👥</h2>
-      <input id="groupAvatarFile" type="file" accept="image/*" class="visually-hidden-input">
-      <div id="groupAvatarPreviewWrap" class="img-preview-wrap round" style="display:none;">
-        <img id="groupAvatarPreview" alt="תצוגה מקדימה">
-        <button type="button" id="groupAvatarRemove" class="img-preview-remove">✕</button>
-      </div>
-      <button type="button" id="groupAvatarBtn" class="gallery-btn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="9" r="1.7"/><path d="M21 15l-5-5-9 9"/></svg>
-        <span>תמונת קבוצה (אופציונלי)</span>
-      </button>
-      <input id="groupName" type="text" placeholder="שם הקבוצה" maxlength="30">
-      <div class="group-members-label">חברי הקבוצה</div>
-      <div id="groupMembersList" class="group-members-list"></div>
-      <div class="sheet-buttons">
-        <button class="cancel" id="groupCancel">ביטול</button>
-        <button class="confirm" id="groupConfirm">יצירת קבוצה</button>
-      </div>
-    </div>
-  </div>
-
 </div>
 
 <script>
@@ -849,35 +721,38 @@ body{
   const apiPatch = (path, data) => api(path, {method:'PATCH', body: JSON.stringify(data)});
   const apiDelete = (path) => api(path, {method:'DELETE'});
 
+  const LS_USER_ID = 'parliament_user_id';
   const LS_USER = 'parliament_user';
   const LS_SELF_AVATAR = 'parliament_self_avatar';
 
-  let me = localStorage.getItem(LS_USER);
-  let myAvatar = localStorage.getItem(LS_SELF_AVATAR) || null;
-  let contacts = [];
-  let currentChat = null;
-  let mediaRecorder = null, recChunks = [], recStart = 0, recTimerInt = null, recStream = null;
-  let callTimerInt = null, callSeconds = 0, callTargetName = '';
-  const messagesCache = {}; // contact_id -> rendered message objects
-  const lastPreview = {};   // contact_id -> {text, time, ts}
-
-  const seedContacts = [
-    {id:'c1', name:'נועה כהן', status:'מחובר/ת', color:0},
-    {id:'c2', name:'איתן לוי', status:'נראה/תה לאחרונה 09:14', color:1},
-    {id:'c3', name:'שירה בן דוד', status:'מחובר/ת', color:2},
-  ];
-
-  function initials(name){
-    const parts = name.trim().split(' ').filter(Boolean);
-    if(parts.length>=2) return parts[0][0]+parts[1][0];
-    return name.slice(0,2);
+  // `me` is the current user's row {id, name, avatar}. Chat is strictly user-to-user:
+  // there is no separate "contacts" concept — the people list below IS the users table.
+  let me = null;
+  const storedUserId = localStorage.getItem(LS_USER_ID);
+  if(storedUserId){
+    me = {
+      id: Number(storedUserId),
+      name: localStorage.getItem(LS_USER) || '',
+      avatar: localStorage.getItem(LS_SELF_AVATAR) || null,
+    };
   }
 
-  function avatarInner(c){
-    if(c && c.avatar) return `<img src="${c.avatar}" alt="">`;
-    if(c && c.isGroup) return '👥';
-    if(c && c.isBusiness) return '🏢';
-    return initials((c && c.name) || (c && c.creator) || '?');
+  let users = [];          // everyone except me, id -> row
+  let currentChat = null;  // the user object I'm chatting with
+  let mediaRecorder = null, recChunks = [], recStart = 0, recTimerInt = null, recStream = null;
+  let callTimerInt = null, callSeconds = 0, callTargetName = '';
+  const messagesCache = {}; // user_id -> rendered message objects
+  const lastPreview = {};   // user_id -> {text, time, ts}
+
+  function initials(name){
+    const parts = (name||'').trim().split(' ').filter(Boolean);
+    if(parts.length>=2) return parts[0][0]+parts[1][0];
+    return (name||'?').slice(0,2);
+  }
+
+  function avatarInner(u){
+    if(u && u.avatar) return `<img src="${u.avatar}" alt="">`;
+    return initials((u && u.name) || (u && u.creator) || '?');
   }
 
   function fmtTime(ts){
@@ -888,8 +763,9 @@ body{
   function rowToMsg(row){
     return {
       id: row.id,
-      from: row.from_name === me ? 'me' : 'them',
-      fromName: row.from_name,
+      senderId: row.sender_id,
+      recipientId: row.recipient_id,
+      from: row.sender_id === me.id ? 'me' : 'them',
       type: row.type,
       text: row.content,
       audio: row.audio_data,
@@ -919,26 +795,26 @@ body{
     return (bytes/(1024*1024)).toFixed(1)+' MB';
   }
 
-  async function fetchMessages(cid){
+  async function fetchMessages(otherId){
     let data;
     try{
-      data = await apiGet('messages?contact_id='+encodeURIComponent(cid));
+      data = await apiGet('messages?user_id='+me.id+'&with_id='+otherId);
     }catch(err){
       console.error(err);
       return [];
     }
     const msgs = data.map(rowToMsg);
-    messagesCache[cid] = msgs;
+    messagesCache[otherId] = msgs;
     if(msgs.length){
       const last = msgs[msgs.length-1];
-      lastPreview[cid] = {text: msgPreviewText(last), time: fmtTime(last.ts), ts:last.ts};
+      lastPreview[otherId] = {text: msgPreviewText(last), time: fmtTime(last.ts), ts:last.ts};
     }
     return msgs;
   }
 
-  async function insertMessage(cid, fromName, payload){
+  async function insertMessage(recipientId, payload){
     const row = {
-      contact_id: cid, from_name: fromName, type: payload.type,
+      sender_id: me.id, recipient_id: recipientId, type: payload.type,
       content: payload.text || null, audio_data: payload.audio || null, duration: payload.duration || null,
       file_name: payload.fileName || null, file_size: payload.fileSize || null, mime_type: payload.mimeType || null, file_data: payload.fileData || null
     };
@@ -952,11 +828,11 @@ body{
     }
   }
 
-  async function deleteMessage(cid, m){
+  async function deleteMessage(otherId, m){
     if(m.id==null) return;
     const label = m.type==='voice' ? 'ההודעה הקולית' : m.type==='file' ? 'הקובץ' : 'ההודעה';
     if(!confirm('למחוק את '+label+'?')) return;
-    const arr = messagesCache[cid] || [];
+    const arr = messagesCache[otherId] || [];
     const idx = arr.findIndex(x=> x.id===m.id);
     if(idx>-1) arr.splice(idx,1);
     try{
@@ -967,12 +843,12 @@ body{
     }
     if(arr.length){
       const last = arr[arr.length-1];
-      lastPreview[cid] = {text: msgPreviewText(last), time: fmtTime(last.ts), ts:last.ts};
+      lastPreview[otherId] = {text: msgPreviewText(last), time: fmtTime(last.ts), ts:last.ts};
     } else {
-      delete lastPreview[cid];
+      delete lastPreview[otherId];
     }
     renderMessages();
-    renderContacts();
+    renderUserList();
   }
 
   // ---------- UNREAD / NOTIFICATIONS ----------
@@ -983,8 +859,8 @@ body{
 
   function saveUnread(){ localStorage.setItem(LS_UNREAD, JSON.stringify(unread)); }
 
-  function markRead(cid){
-    if(unread[cid]){ delete unread[cid]; saveUnread(); renderContacts(); }
+  function markRead(otherId){
+    if(unread[otherId]){ delete unread[otherId]; saveUnread(); renderUserList(); }
   }
 
   function playPing(){
@@ -1000,18 +876,18 @@ body{
     }catch(e){}
   }
 
-  function showToast(contact, text){
+  function showToast(user, text){
     const stack = document.getElementById('toastStack');
     const t = document.createElement('div');
     t.className = 'toast';
-    t.innerHTML = `<div class="avatar">${avatarInner(contact)}</div>
+    t.innerHTML = `<div class="avatar">${avatarInner(user)}</div>
       <div class="toast-body">
-        <div class="toast-name">${escapeHtml(contact.name)}</div>
+        <div class="toast-name">${escapeHtml(user.name)}</div>
         <div class="toast-text">${escapeHtml(text)}</div>
       </div>`;
     t.addEventListener('click', ()=>{
       t.remove();
-      document.getElementById('chatScreen').classList.contains('open') && currentChat && currentChat.id===contact.id ? null : openChat(contact);
+      document.getElementById('chatScreen').classList.contains('open') && currentChat && currentChat.id===user.id ? null : openChat(user);
     });
     stack.appendChild(t);
     requestAnimationFrame(()=> t.classList.add('in'));
@@ -1021,11 +897,11 @@ body{
     }, 3800);
   }
 
-  function sendBrowserNotification(contact, text){
+  function sendBrowserNotification(user, text){
     if(!notifOn || !('Notification' in window) || Notification.permission!=='granted') return;
     if(document.visibilityState==='visible') return;
     try{
-      const n = new Notification('פרלמנט · '+contact.name, {body:text, tag:'parliament-'+contact.id});
+      const n = new Notification('פרלמנט · '+user.name, {body:text, tag:'parliament-'+user.id});
       n.onclick = ()=>{ window.focus(); n.close(); };
     }catch(e){}
   }
@@ -1080,104 +956,138 @@ body{
     }
   });
 
-  // Delivers an incoming message to a contact's thread, handling read-state & notifications.
-  function deliverMsg(contact, msg){
-    if(!messagesCache[contact.id]) messagesCache[contact.id] = [];
-    messagesCache[contact.id].push(msg);
-    lastPreview[contact.id] = {text: msgPreviewText(msg), time: fmtTime(msg.ts), ts: msg.ts};
+  // Delivers an incoming message to a user's thread, handling read-state & notifications.
+  function deliverMsg(user, msg){
+    if(!messagesCache[user.id]) messagesCache[user.id] = [];
+    messagesCache[user.id].push(msg);
+    lastPreview[user.id] = {text: msgPreviewText(msg), time: fmtTime(msg.ts), ts: msg.ts};
 
-    const chatOpenAndVisible = currentChat && currentChat.id===contact.id
+    const chatOpenAndVisible = currentChat && currentChat.id===user.id
       && document.getElementById('chatScreen').classList.contains('open')
       && document.visibilityState==='visible';
 
     if(chatOpenAndVisible){
       renderMessages();
     } else {
-      unread[contact.id] = (unread[contact.id]||0)+1;
+      unread[user.id] = (unread[user.id]||0)+1;
       saveUnread();
-      renderContacts();
+      renderUserList();
       const preview = msgPreviewText(msg);
-      showToast(contact, preview);
-      sendBrowserNotification(contact, preview);
+      showToast(user, preview);
+      sendBrowserNotification(user, preview);
       playPing();
     }
   }
 
   // ---------- REALTIME (polling) ----------
   // Neon has no browser-safe realtime channel, so we poll periodically instead:
-  // the open chat thread refreshes often, contacts (for previews/new chats) less often.
-  let pollChatInt = null, pollContactsInt = null;
+  // the open chat thread refreshes often, the user list (for previews) less often.
+  let pollChatInt = null, pollListInt = null;
 
   async function pollOpenChat(){
     if(!currentChat || !document.getElementById('chatScreen').classList.contains('open')) return;
-    const cid = currentChat.id;
-    const prevCount = (messagesCache[cid]||[]).length;
-    const msgs = await fetchMessages(cid);
+    const otherId = currentChat.id;
+    const prevCount = (messagesCache[otherId]||[]).length;
+    const msgs = await fetchMessages(otherId);
     if(msgs.length > prevCount){
-      const newOnes = msgs.slice(prevCount).filter(m=> m.fromName !== me);
+      const newOnes = msgs.slice(prevCount).filter(m=> m.senderId !== me.id);
       renderMessages();
       newOnes.forEach(m=> deliverMsg(currentChat, m));
-      markRead(cid);
+      markRead(otherId);
     }
   }
 
-  async function pollContactsPreviews(){
-    await Promise.all(contacts.map(c=> fetchMessages(c.id)));
-    if(!document.getElementById('chatScreen').classList.contains('open')) renderContacts();
+  async function pollUserListPreviews(){
+    if(document.getElementById('chatScreen').classList.contains('open')) return;
+    await loadUsers();
+    renderUserList();
   }
 
   function subscribeRealtime(){
     if(pollChatInt) clearInterval(pollChatInt);
-    if(pollContactsInt) clearInterval(pollContactsInt);
+    if(pollListInt) clearInterval(pollListInt);
     pollChatInt = setInterval(pollOpenChat, 3000);
-    pollContactsInt = setInterval(pollContactsPreviews, 6000);
+    pollListInt = setInterval(pollUserListPreviews, 6000);
   }
 
   // ---------- INIT / ONBOARDING ----------
-  async function loadContacts(){
+  async function loadUsers(){
     let data;
     try{
-      data = await apiGet('contacts');
+      data = await apiGet('users');
     }catch(err){
       console.error(err);
-      contacts = [];
+      users = [];
       return;
     }
-    contacts = data.map(row=>({
-      id: row.id, name: row.name, status: row.status,
-      isBusiness: row.is_business || false, category: row.category, phone: row.phone, description: row.description,
-      isGroup: row.is_group || false, members: row.members ? row.members.split(',') : undefined,
-      avatar: row.avatar, chatBg: row.background
-    }));
+    users = data.filter(u=> u.id !== me.id);
     // fetch last-message previews for the list
-    await Promise.all(contacts.map(c=> fetchMessages(c.id)));
+    await Promise.all(users.map(u=> fetchMessages(u.id)));
   }
 
-  async function ensureSeedContacts(){
-    let existing;
+  async function registerUser(name, avatar){
+    if(!name) return null;
     try{
-      existing = await apiGet('contacts');
-    }catch(err){ console.error(err); return; }
-    if(existing && existing.length>0) return;
-    try{
-      for(const c of seedContacts){
-        await apiPost('contacts', {id:c.id, name:c.name, status:c.status});
-      }
-      await apiPost('messages', {contact_id:'c1', from_name:'נועה כהן', type:'text', content:'היי! ברוך הבא לפרלמנט 🎙️'});
-      await apiPost('messages', {contact_id:'c1', from_name:'נועה כהן', type:'text', content:'אפשר לשלוח פה הודעות, הודעות קוליות ואפילו להתקשר'});
-    }catch(err){ console.error(err); }
-  }
-
-  async function registerUser(name){
-    if(!name) return;
-    try{
-      await apiPost('users', {name});
-    }catch(err){ console.error(err); }
+      return await apiPost('users', {name, avatar});
+    }catch(err){ console.error(err); return null; }
   }
 
   function renderSelfAvatar(){
     const el = document.getElementById('selfAvatar');
-    if(el) el.innerHTML = avatarInner({name: me, avatar: myAvatar});
+    if(el) el.innerHTML = avatarInner({name: me.name, avatar: me.avatar});
+  }
+
+  function saveMe(){
+    localStorage.setItem(LS_USER_ID, String(me.id));
+    localStorage.setItem(LS_USER, me.name);
+    if(me.avatar){ localStorage.setItem(LS_SELF_AVATAR, me.avatar); }
+    else{ localStorage.removeItem(LS_SELF_AVATAR); }
+  }
+
+  async function enterApp(){
+    document.getElementById('onboard').classList.remove('show');
+    document.getElementById('contactsScreen').style.display = 'flex';
+    document.getElementById('contactList').innerHTML = '<div class="empty-state"><div>טוען...</div></div>';
+    renderSelfAvatar();
+    await loadUsers();
+    renderUserList();
+    subscribeRealtime();
+  }
+
+  async function renderOnboardUserList(){
+    const wrap = document.getElementById('obUserList');
+    const divider = document.getElementById('obDivider');
+    wrap.innerHTML = '<div style="font-size:13px; color:var(--text-faint); padding:6px 2px;">טוען משתמשים...</div>';
+    let all;
+    try{
+      all = await apiGet('users');
+    }catch(err){
+      console.error(err);
+      wrap.innerHTML = '';
+      divider.style.display = 'none';
+      return;
+    }
+    if(!all.length){
+      wrap.innerHTML = '';
+      divider.style.display = 'none';
+      return;
+    }
+    divider.style.display = 'flex';
+    wrap.innerHTML = '';
+    all.forEach(u=>{
+      const row = document.createElement('div');
+      row.className = 'ob-user-row';
+      row.innerHTML = `
+        <div class="avatar">${avatarInner(u)}</div>
+        <div class="ob-user-name">${escapeHtml(u.name)}</div>`;
+      row.addEventListener('click', async ()=>{
+        me = {id: u.id, name: u.name, avatar: u.avatar};
+        saveMe();
+        await registerUser(me.name, me.avatar);
+        await enterApp();
+      });
+      wrap.appendChild(row);
+    });
   }
 
   function boot(){
@@ -1187,14 +1097,9 @@ body{
       setTimeout(async ()=>{
         if(!me){
           document.getElementById('onboard').classList.add('show');
+          renderOnboardUserList();
         } else {
-          document.getElementById('contactList').innerHTML = '<div class="empty-state"><div>טוען...</div></div>';
-          renderSelfAvatar();
-          await registerUser(me);
-          await ensureSeedContacts();
-          await loadContacts();
-          renderContacts();
-          subscribeRealtime();
+          await enterApp();
         }
       }, 620);
     }, 1200);
@@ -1202,54 +1107,47 @@ body{
 
   document.getElementById('obStart').addEventListener('click', async ()=>{
     const val = document.getElementById('obName').value.trim();
-    if(!val){ alert('צריך להקליד שם.'); return; }
-    me = val;
-    localStorage.setItem(LS_USER, me);
-    document.getElementById('onboard').classList.remove('show');
-    document.getElementById('contactsScreen').style.display = 'flex';
-    document.getElementById('contactList').innerHTML = '<div class="empty-state"><div>טוען...</div></div>';
-    renderSelfAvatar();
-    await registerUser(me);
-    await ensureSeedContacts();
-    await loadContacts();
-    renderContacts();
-    subscribeRealtime();
+    if(!val){ alert('צריך לבחור משתמש קיים או להקליד שם חדש.'); return; }
+    const user = await registerUser(val, null);
+    if(!user){ alert('שגיאה בהתחברות - בדוק/י את חיבור ה-DB'); return; }
+    me = {id: user.id, name: user.name, avatar: user.avatar};
+    saveMe();
+    await enterApp();
   });
 
-  // ---------- CONTACTS ----------
-  function lastMsgPreview(cid){
-    return lastPreview[cid] || {text:'התחל/י שיחה', time:''};
+  // ---------- USER LIST ----------
+  function lastMsgPreview(otherId){
+    return lastPreview[otherId] || {text:'התחל/י שיחה', time:''};
   }
 
-  function renderContacts(filter){
+  function renderUserList(filter){
     const list = document.getElementById('contactList');
     list.innerHTML = '';
     const q = (filter||'').trim();
-    const shown = contacts.filter(c => !q || c.name.includes(q));
+    const shown = users.filter(u => !q || u.name.includes(q));
     if(shown.length===0){
       list.innerHTML = `<div class="empty-state">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        <div>אין עדיין אנשי קשר</div>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
+        <div>עדיין אין משתמשים אחרים - כשמישהו יצטרף, הוא/היא יופיעו כאן.</div>
       </div>`;
       return;
     }
-    shown.forEach(c=>{
-      const prev = lastMsgPreview(c.id);
-      const count = unread[c.id]||0;
+    shown.forEach(u=>{
+      const prev = lastMsgPreview(u.id);
+      const count = unread[u.id]||0;
       const row = document.createElement('div');
       row.className = 'contact-row' + (count>0 ? ' unread':'');
-      const bizBadge = c.isBusiness ? `<span class="biz-badge">🏢 עסק</span>` : (c.isGroup ? `<span class="biz-badge">👥 קבוצה</span>` : '');
       row.innerHTML = `
-        <div class="avatar">${avatarInner(c)}<span class="dot"></span></div>
+        <div class="avatar">${avatarInner(u)}<span class="dot"></span></div>
         <div class="contact-info">
-          <div class="contact-name">${bizBadge}${escapeHtml(c.name)}</div>
+          <div class="contact-name">${escapeHtml(u.name)}</div>
           <div class="contact-preview">${escapeHtml(prev.text)}</div>
         </div>
         <div class="contact-meta">
           <div class="contact-time">${prev.time}</div>
           ${count>0 ? `<div class="unread-badge">${count>9?'9+':count}</div>` : ''}
         </div>`;
-      row.addEventListener('click', ()=> openChat(c));
+      row.addEventListener('click', ()=> openChat(u));
       list.appendChild(row);
     });
   }
@@ -1259,7 +1157,7 @@ body{
   }
 
   document.getElementById('searchInput').addEventListener('input', e=>{
-    renderContacts(e.target.value);
+    renderUserList(e.target.value);
   });
 
   // ---------- IMAGE PICKER HELPER ----------
@@ -1324,185 +1222,31 @@ body{
     removeEl.addEventListener('click', ()=> reset(null));
     return { getData: ()=> data, reset };
   }
-  const ncAvatarPicker = setupImagePicker('ncAvatarFile','ncAvatarBtn','ncAvatarPreviewWrap','ncAvatarPreview','ncAvatarRemove');
-  const editAvatarPicker = setupImagePicker('editAvatarFile','editAvatarBtn','editAvatarPreviewWrap','editAvatarPreview','editAvatarRemove');
-  const bizLogoPicker = setupImagePicker('bizLogoFile','bizLogoBtn','bizLogoPreviewWrap','bizLogoPreview','bizLogoRemove');
-
-  // ---------- NEW CONTACT ----------
-  document.getElementById('btnNewChat').addEventListener('click', ()=>{
-    document.getElementById('newContactName').value='';
-    ncAvatarPicker.reset(null);
-    document.getElementById('newChatModal').classList.add('show');
-  });
-  document.getElementById('ncCancel').addEventListener('click', ()=>{
-    document.getElementById('newChatModal').classList.remove('show');
-  });
-  document.getElementById('ncConfirm').addEventListener('click', async ()=>{
-    const name = document.getElementById('newContactName').value.trim();
-    if(!name){ alert('צריך להקליד שם לאיש הקשר.'); return; }
-    const c = {id:'c'+Date.now(), name, status:'מחובר/ת', avatar: ncAvatarPicker.getData()};
-    try{
-      await apiPost('contacts', {id:c.id, name:c.name, status:c.status, avatar:c.avatar});
-    }catch(err){
-      console.error(err);
-      alert('שגיאה ביצירת איש קשר - בדוק/י את חיבור ה-DB');
-      return;
-    }
-    contacts.push(c);
-    messagesCache[c.id] = [];
-    document.getElementById('newChatModal').classList.remove('show');
-    renderContacts();
-    openChat(c);
-  });
-
-  // ---------- NEW BUSINESS ----------
-  document.getElementById('btnNewBusiness').addEventListener('click', ()=>{
-    document.getElementById('bizName').value = '';
-    document.getElementById('bizCategory').value = 'מסעדה';
-    document.getElementById('bizPhone').value = '';
-    document.getElementById('bizDesc').value = '';
-    bizLogoPicker.reset(null);
-    document.getElementById('newBusinessModal').classList.add('show');
-  });
-  document.getElementById('bizCancel').addEventListener('click', ()=>{
-    document.getElementById('newBusinessModal').classList.remove('show');
-  });
-  document.getElementById('bizConfirm').addEventListener('click', async ()=>{
-    const name = document.getElementById('bizName').value.trim();
-    const category = document.getElementById('bizCategory').value;
-    const phone = document.getElementById('bizPhone').value.trim();
-    const desc = document.getElementById('bizDesc').value.trim();
-    if(!name){ alert('צריך להקליד שם עסק.'); return; }
-    const avatar = bizLogoPicker.getData();
-    const c = {
-      id:'biz'+Date.now(), name, status: category, isBusiness:true, category, phone, description: desc, avatar
-    };
-    try{
-      await apiPost('contacts', {
-        id:c.id, name:c.name, status:c.status, is_business:true, category, phone, description:desc, avatar
-      });
-    }catch(err){
-      console.error(err);
-      alert('שגיאה בפתיחת העסק - בדוק/י את חיבור ה-DB');
-      return;
-    }
-    contacts.push(c);
-    messagesCache[c.id] = [];
-    document.getElementById('newBusinessModal').classList.remove('show');
-    renderContacts();
-    openChat(c);
-    if(desc){
-      const row = await insertMessage(c.id, c.name, {type:'text', text: desc});
-      if(row) deliverMsg(c, row);
-    }
-  });
-
-  // ---------- NEW GROUP ----------
-  const groupAvatarPicker = setupImagePicker('groupAvatarFile','groupAvatarBtn','groupAvatarPreviewWrap','groupAvatarPreview','groupAvatarRemove');
-
-  function renderGroupMemberPicker(){
-    const wrap = document.getElementById('groupMembersList');
-    wrap.innerHTML = '';
-    const candidates = contacts.filter(c=> !c.isGroup);
-    if(candidates.length===0){
-      wrap.innerHTML = `<div style="font-size:13px; color:var(--text-faint); padding:6px 2px;">אין עדיין אנשי קשר להוסיף - צור/י איש קשר קודם.</div>`;
-      return;
-    }
-    candidates.forEach(c=>{
-      const row = document.createElement('label');
-      row.className = 'group-member-row';
-      row.innerHTML = `
-        <input type="checkbox" value="${escapeHtml(c.name)}">
-        <div class="avatar">${avatarInner(c)}</div>
-        <div class="gm-name">${escapeHtml(c.name)}</div>`;
-      wrap.appendChild(row);
-    });
-  }
-
-  document.getElementById('btnNewGroup').addEventListener('click', ()=>{
-    document.getElementById('groupName').value = '';
-    groupAvatarPicker.reset(null);
-    renderGroupMemberPicker();
-    document.getElementById('newGroupModal').classList.add('show');
-  });
-  document.getElementById('groupCancel').addEventListener('click', ()=>{
-    document.getElementById('newGroupModal').classList.remove('show');
-  });
-  document.getElementById('groupConfirm').addEventListener('click', async ()=>{
-    const name = document.getElementById('groupName').value.trim();
-    if(!name){ alert('צריך להקליד שם לקבוצה.'); return; }
-    const checked = Array.from(document.querySelectorAll('#groupMembersList input[type="checkbox"]:checked')).map(el=> el.value);
-    const members = [me, ...checked];
-    const avatar = groupAvatarPicker.getData();
-    const c = {
-      id:'grp'+Date.now(), name, status: members.length+' חברים', isGroup:true, members, avatar
-    };
-    try{
-      await apiPost('contacts', {
-        id:c.id, name:c.name, status:c.status, is_group:true, members: members.join(','), avatar
-      });
-    }catch(err){
-      console.error(err);
-      alert('שגיאה ביצירת הקבוצה - בדוק/י את חיבור ה-DB');
-      return;
-    }
-    contacts.push(c);
-    messagesCache[c.id] = [];
-    document.getElementById('newGroupModal').classList.remove('show');
-    renderContacts();
-    openChat(c);
-  });
 
   // ---------- CHAT SCREEN ----------
-  function applyChatBackground(c){
-    const el = document.getElementById('messages');
-    el.style.backgroundImage = c.chatBg ? `url(${c.chatBg})` : '';
-  }
-
-  async function openChat(c){
-    currentChat = c;
-    document.getElementById('chatAvatar').innerHTML = avatarInner(c);
-    document.getElementById('chatName').textContent = c.name;
-    document.getElementById('chatStatus').textContent = c.isBusiness
-      ? [c.category, c.phone].filter(Boolean).join(' · ')
-      : c.isGroup
-      ? (c.members ? c.members.join(', ') : c.status)
-      : (c.status || 'מחובר/ת');
+  async function openChat(u){
+    currentChat = u;
+    document.getElementById('chatAvatar').innerHTML = avatarInner(u);
+    document.getElementById('chatName').textContent = u.name;
+    document.getElementById('chatStatus').textContent = 'מחובר/ת';
     document.getElementById('messages').innerHTML = '<div class="day-divider">טוען הודעות...</div>';
-    applyChatBackground(c);
+    document.getElementById('messages').style.backgroundImage = '';
     document.getElementById('chatScreen').classList.add('open');
-    await fetchMessages(c.id);
+    await fetchMessages(u.id);
     renderMessages();
-    markRead(c.id);
+    markRead(u.id);
   }
 
   document.getElementById('btnBack').addEventListener('click', ()=>{
     document.getElementById('chatScreen').classList.remove('open');
-    setTimeout(renderContacts, 250);
+    setTimeout(renderUserList, 250);
   });
 
-  // ---------- CONTACT INFO ----------
-  function renderContactInfo(c){
+  // ---------- USER INFO ----------
+  function renderContactInfo(u){
     const body = document.getElementById('contactInfoBody');
-    const statusLine = c.isBusiness
-      ? [c.category, c.phone].filter(Boolean).join(' · ')
-      : c.isGroup
-      ? (c.members ? c.members.length+' חברים' : c.status)
-      : (c.status || 'מחובר/ת');
 
-    let membersHtml = '';
-    if(c.isGroup && c.members){
-      membersHtml = `<div class="info-section">
-        <div class="info-section-title">חברי הקבוצה</div>
-        ${c.members.map(n=>`
-          <div class="info-members-row">
-            <div class="avatar">${initials(n)}</div>
-            <div>${escapeHtml(n)}${n===me ? ' (את/ה)' : ''}</div>
-          </div>`).join('')}
-      </div>`;
-    }
-
-    const msgs = messagesCache[c.id] || [];
+    const msgs = messagesCache[u.id] || [];
     const fileMsgs = msgs.filter(m=> m.type==='file' && m.fileData);
     const images = fileMsgs.filter(m=> (m.mimeType||'').startsWith('image/'));
     const otherFiles = fileMsgs.filter(m=> !(m.mimeType||'').startsWith('image/'));
@@ -1532,9 +1276,9 @@ body{
 
     body.innerHTML = `
       <div class="info-header">
-        <div class="info-avatar">${avatarInner(c)}</div>
-        <div class="info-name">${escapeHtml(c.name)}</div>
-        <div class="info-status">${escapeHtml(statusLine)}</div>
+        <div class="info-avatar">${avatarInner(u)}</div>
+        <div class="info-name">${escapeHtml(u.name)}</div>
+        <div class="info-status">מחובר/ת</div>
         <div class="info-actions">
           <button class="info-action-btn" id="infoActionVoice">
             <span class="circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.1-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.7a2 2 0 0 1-.5 2.1L7.9 9.9a16 16 0 0 0 6 6l1.4-1.3a2 2 0 0 1 2.1-.5c.9.3 1.8.5 2.7.6a2 2 0 0 1 1.7 2z"/></svg></span>
@@ -1544,13 +1288,8 @@ body{
             <span class="circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="2.5"/><path d="M16 10.5l5-3v9l-5-3"/></svg></span>
             וידאו
           </button>
-          <button class="info-action-btn" id="infoActionEdit">
-            <span class="circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span>
-            עריכה
-          </button>
         </div>
       </div>
-      ${membersHtml}
       ${mediaHtml}
       ${filesHtml}
       ${noSharedHtml}
@@ -1563,10 +1302,6 @@ body{
     document.getElementById('infoActionVideo').addEventListener('click', ()=>{
       document.getElementById('contactInfoScreen').classList.remove('open');
       startCall(true);
-    });
-    document.getElementById('infoActionEdit').addEventListener('click', ()=>{
-      document.getElementById('contactInfoScreen').classList.remove('open');
-      openEditContact();
     });
   }
 
@@ -1582,40 +1317,26 @@ body{
     document.getElementById('contactInfoScreen').classList.remove('open');
   });
 
-  // ---------- EDIT / DELETE CONTACT ----------
-  function openEditContact(){
-    if(!currentChat) return;
-    document.getElementById('editContactName').value = currentChat.name;
-    document.getElementById('editContactStatus').value = currentChat.status || '';
-    editAvatarPicker.reset(currentChat.avatar || null);
-    document.getElementById('editContactModal').classList.add('show');
-  }
-  document.getElementById('btnEditContact').addEventListener('click', openEditContact);
-
   // ---------- CHAT BACKGROUND ----------
-  async function persistChatBackground(cid, bgData){
-    try{
-      await apiPatch('contacts', {id: cid, background: bgData});
-    }catch(err){
-      console.error(err);
-      alert('שגיאה בשמירת הרקע - בדוק/י את חיבור ה-DB');
-      return false;
-    }
-    return true;
+  // Per-device only (not persisted to the DB — it's not tied to a "contact" row anymore).
+  const chatBackgrounds = JSON.parse(localStorage.getItem('parliament_chat_bgs') || '{}');
+  function saveChatBackgrounds(){ localStorage.setItem('parliament_chat_bgs', JSON.stringify(chatBackgrounds)); }
+  function applyChatBackground(u){
+    const el = document.getElementById('messages');
+    const bg = chatBackgrounds[u.id];
+    el.style.backgroundImage = bg ? `url(${bg})` : '';
   }
 
   let bgPressTimer = null, bgLongPressed = false;
   const btnChatBg = document.getElementById('btnChatBg');
   btnChatBg.addEventListener('pointerdown', ()=>{
     bgLongPressed = false;
-    bgPressTimer = setTimeout(async ()=>{
+    bgPressTimer = setTimeout(()=>{
       bgLongPressed = true;
-      if(currentChat && currentChat.chatBg && confirm('להסיר את רקע השיחה?')){
-        currentChat.chatBg = null;
-        const idx = contacts.findIndex(c=>c.id===currentChat.id);
-        if(idx>-1) contacts[idx].chatBg = null;
+      if(currentChat && chatBackgrounds[currentChat.id] && confirm('להסיר את רקע השיחה?')){
+        delete chatBackgrounds[currentChat.id];
+        saveChatBackgrounds();
         applyChatBackground(currentChat);
-        await persistChatBackground(currentChat.id, null);
       }
     }, 600);
   });
@@ -1633,65 +1354,13 @@ body{
     if(!file || !currentChat) return;
     try{
       const bgData = await compressImageFile(file, 900, 0.75);
-      const ok = await persistChatBackground(currentChat.id, bgData);
-      if(!ok) return;
-      currentChat.chatBg = bgData;
-      const idx = contacts.findIndex(c=>c.id===currentChat.id);
-      if(idx>-1) contacts[idx].chatBg = bgData;
+      chatBackgrounds[currentChat.id] = bgData;
+      saveChatBackgrounds();
       applyChatBackground(currentChat);
     }catch(err){
       console.error(err);
       alert('שגיאה בעיבוד התמונה. נסה/י תמונה אחרת.');
     }
-  });
-
-  document.getElementById('ecCancel').addEventListener('click', ()=>{
-    document.getElementById('editContactModal').classList.remove('show');
-  });
-  document.getElementById('ecConfirm').addEventListener('click', async ()=>{
-    if(!currentChat) return;
-    const name = document.getElementById('editContactName').value.trim();
-    const status = document.getElementById('editContactStatus').value.trim() || 'מחובר/ת';
-    if(!name){ alert('צריך להקליד שם.'); return; }
-    const avatar = editAvatarPicker.getData();
-    try{
-      await apiPatch('contacts', {id: currentChat.id, name, status, avatar});
-    }catch(err){
-      console.error(err);
-      alert('שגיאה בעדכון - בדוק/י את חיבור ה-DB');
-      return;
-    }
-    currentChat.name = name;
-    currentChat.status = status;
-    currentChat.avatar = avatar;
-    const idx = contacts.findIndex(c=>c.id===currentChat.id);
-    if(idx>-1){ contacts[idx].name = name; contacts[idx].status = status; contacts[idx].avatar = avatar; }
-    document.getElementById('chatAvatar').innerHTML = avatarInner(currentChat);
-    document.getElementById('chatName').textContent = name;
-    document.getElementById('chatStatus').textContent = status;
-    document.getElementById('editContactModal').classList.remove('show');
-    renderContacts();
-  });
-  document.getElementById('ecDelete').addEventListener('click', async ()=>{
-    if(!currentChat) return;
-    if(!confirm('למחוק את השיחה עם '+currentChat.name+'? הפעולה בלתי הפיכה.')) return;
-    const cid = currentChat.id;
-    try{
-      await apiDelete('contacts?id='+encodeURIComponent(cid));
-    }catch(err){
-      console.error(err);
-      alert('שגיאה במחיקה - בדוק/י את חיבור ה-DB');
-      return;
-    }
-    contacts = contacts.filter(c=>c.id!==cid);
-    delete messagesCache[cid];
-    delete lastPreview[cid];
-    delete unread[cid];
-    saveUnread();
-    document.getElementById('editContactModal').classList.remove('show');
-    document.getElementById('chatScreen').classList.remove('open');
-    currentChat = null;
-    setTimeout(renderContacts, 250);
   });
 
   // ---------- SHOWCASE FEED (יצירות היזמים) ----------
@@ -1735,7 +1404,7 @@ body{
       const playIcon = item.type==='סרטון'
         ? `<div class="sc-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>`
         : '';
-      const mineTag = item.creator===me ? `<span class="sc-mine-tag">שלך</span>` : '';
+      const mineTag = item.creator===me.name ? `<span class="sc-mine-tag">שלך</span>` : '';
       const thumbContent = item.image
         ? `<img src="${item.image}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;">`
         : `<span style="position:relative;z-index:1;">${item.icon}</span>`;
@@ -1780,96 +1449,21 @@ body{
     document.getElementById('showcaseScreen').classList.remove('open');
   });
 
-  // ---------- DISCOVER USERS ----------
-  async function loadAndRenderDiscover(){
-    const list = document.getElementById('discoverList');
-    list.innerHTML = '<div class="day-divider">טוען...</div>';
-    let data;
-    try{
-      data = await apiGet('users');
-    }catch(err){
-      console.error(err);
-      list.innerHTML = '<div class="empty-state"><div>שגיאה בטעינה</div></div>';
-      return;
-    }
-    const others = (data||[]).filter(u=> u.name !== me);
-    if(others.length===0){
-      list.innerHTML = `<div class="empty-state">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
-        <div>עדיין אין כאן אנשים אחרים - כשעוד מישהו יפתח את האפליקציה, הוא/היא יופיעו כאן.</div>
-      </div>`;
-      return;
-    }
-    list.innerHTML = '';
-    others.forEach(u=>{
-      const row = document.createElement('div');
-      row.className = 'contact-row';
-      row.innerHTML = `
-        <div class="avatar">${initials(u.name)}</div>
-        <div class="contact-info">
-          <div class="contact-name">${escapeHtml(u.name)}</div>
-          <div class="contact-preview">משתמש/ת באפליקציה</div>
-        </div>
-        <button class="switch-user-btn" title="החלף/י להיות המשתמש/ת הזה/זו">🔄</button>`;
-      row.addEventListener('click', async (e)=>{
-        if(e.target.closest('.switch-user-btn')) return;
-        let contact = contacts.find(c=> !c.isGroup && !c.isBusiness && c.name===u.name);
-        if(!contact){
-          contact = {id:'c'+Date.now(), name:u.name, status:'מחובר/ת'};
-          try{
-            await apiPost('contacts', contact);
-          }catch(insErr){ console.error(insErr); alert('שגיאה בפתיחת שיחה'); return; }
-          contacts.push(contact);
-          messagesCache[contact.id] = [];
-        }
-        document.getElementById('discoverScreen').classList.remove('open');
-        renderContacts();
-        openChat(contact);
-      });
-      row.querySelector('.switch-user-btn').addEventListener('click', (e)=>{
-        e.stopPropagation();
-        switchToUser(u.name);
-      });
-      list.appendChild(row);
-    });
-  }
-
-  function switchToUser(name){
-    if(!confirm('להתחבר כ-"'+name+'"? כל ההודעות ישוייכו מעכשיו לזהות הזאת.')) return;
-    me = name;
-    localStorage.setItem(LS_USER, me);
-    myAvatar = null;
-    localStorage.removeItem(LS_SELF_AVATAR);
-    registerUser(me);
-    renderSelfAvatar();
-    renderContacts();
-    if(currentChat && document.getElementById('chatScreen').classList.contains('open')) renderMessages();
-    document.getElementById('discoverScreen').classList.remove('open');
-  }
-
-  document.getElementById('btnDiscoverUsers').addEventListener('click', async ()=>{
-    document.getElementById('discoverScreen').classList.add('open');
-    await loadAndRenderDiscover();
-  });
-  document.getElementById('btnDiscoverBack').addEventListener('click', ()=>{
-    document.getElementById('discoverScreen').classList.remove('open');
-  });
-
   // ---------- ALL FILES (FOLDERS) ----------
   let allFilesView = 'list'; // 'list' | 'folder'
 
   function computeSentFolders(){
-    return contacts.map(c=>{
-      const msgs = messagesCache[c.id] || [];
+    return users.map(u=>{
+      const msgs = messagesCache[u.id] || [];
       const files = msgs.filter(m=> m.from==='me' && m.type==='file' && m.fileData);
-      return {contact:c, files};
+      return {user:u, files};
     }).filter(f=> f.files.length>0);
   }
 
   function renderFolderList(){
     allFilesView = 'list';
     document.getElementById('allFilesTitle').textContent = 'כל הקבצים 📁';
-    document.getElementById('allFilesSubtitle').textContent = 'קבצים ששלחת, לפי איש קשר';
+    document.getElementById('allFilesSubtitle').textContent = 'קבצים ששלחת, לפי משתמש';
     const body = document.getElementById('allFilesBody');
     const folders = computeSentFolders();
     if(folders.length===0){
@@ -1886,18 +1480,18 @@ body{
       row.innerHTML = `
         <div class="folder-icon">📁</div>
         <div class="folder-info">
-          <div class="folder-name">${escapeHtml(f.contact.name)}</div>
+          <div class="folder-name">${escapeHtml(f.user.name)}</div>
           <div class="folder-count">${f.files.length} ${f.files.length===1?'קובץ':'קבצים'}</div>
         </div>
         <div class="folder-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></div>`;
-      row.addEventListener('click', ()=> renderFolderFiles(f.contact, f.files));
+      row.addEventListener('click', ()=> renderFolderFiles(f.user, f.files));
       body.appendChild(row);
     });
   }
 
-  function renderFolderFiles(contact, files){
+  function renderFolderFiles(user, files){
     allFilesView = 'folder';
-    document.getElementById('allFilesTitle').textContent = contact.name;
+    document.getElementById('allFilesTitle').textContent = user.name;
     document.getElementById('allFilesSubtitle').textContent = files.length+' קבצים ששלחת';
     const body = document.getElementById('allFilesBody');
     const images = files.filter(m=> (m.mimeType||'').startsWith('image/'));
@@ -1986,7 +1580,7 @@ body{
     const meta = typeMeta[type];
     const work = {
       type, icon: pick(meta.icons), bg: pick(meta.bgs), image: workImageData,
-      title, description: desc, creator: me || 'אני', likes: 0
+      title, description: desc, creator: me.name || 'אני', likes: 0
     };
     try{
       await apiPost('showcase', work);
@@ -2033,10 +1627,8 @@ body{
 
   function renderBubble(m){
     const row = document.createElement('div');
-    const mine = m.fromName!=null ? (m.fromName===me) : (m.from==='me');
+    const mine = m.from==='me';
     row.className = 'msg-row ' + (mine ? 'me':'them');
-    const senderLabel = (currentChat && currentChat.isGroup && !mine && m.fromName)
-      ? `<div class="sender-label">${escapeHtml(m.fromName)}</div>` : '';
     let bubbleHtml = '';
     if(m.type==='voice'){
       const bars = Array.from({length:20}, ()=> 4+Math.round(Math.random()*14));
@@ -2090,7 +1682,7 @@ body{
     } else {
       bubbleHtml = `<div class="bubble">${escapeHtml(m.text)}<span class="time">${fmtTime(m.ts)}</span></div>`;
     }
-    row.innerHTML = `<div class="bubble-col">${senderLabel}${bubbleHtml}</div>`;
+    row.innerHTML = `<div class="bubble-col">${bubbleHtml}</div>`;
     if(m.type==='voice' && m.audio){
       const btn = row.querySelector('.voice-play');
       btn.addEventListener('click', ()=>{
@@ -2112,7 +1704,7 @@ body{
   async function addMessage(payload){
     const target = currentChat;
     const optimistic = {
-      from:'me', fromName: me, type:payload.type, text:payload.text, audio:payload.audio, duration:payload.duration,
+      from:'me', senderId: me.id, recipientId: target.id, type:payload.type, text:payload.text, audio:payload.audio, duration:payload.duration,
       fileName:payload.fileName, fileSize:payload.fileSize, mimeType:payload.mimeType, fileData:payload.fileData,
       ts: Date.now()
     };
@@ -2120,7 +1712,7 @@ body{
     messagesCache[target.id].push(optimistic);
     lastPreview[target.id] = {text: msgPreviewText(optimistic), time: fmtTime(optimistic.ts), ts: optimistic.ts};
     renderMessages();
-    const saved = await insertMessage(target.id, me, payload);
+    const saved = await insertMessage(target.id, payload);
     if(saved && saved.id!=null){
       optimistic.id = saved.id;
       renderMessages();
@@ -2136,30 +1728,8 @@ body{
         delete lastPreview[target.id];
       }
       renderMessages();
-      renderContacts();
+      renderUserList();
     }
-  }
-
-  function autoReply(){
-    const replies = ['סבבה 👍','הבנתי, תודה!','מעולה, נדבר בהמשך','😄','רגע, אני אבדוק ואחזור אליך','בטח, אין בעיה'];
-    const targetContact = currentChat;
-    if(!targetContact) return;
-    if(targetContact.isGroup){
-      const others = (targetContact.members||[]).filter(n=> n!==me);
-      if(others.length===0) return;
-      const senderName = others[Math.floor(Math.random()*others.length)];
-      setTimeout(async ()=>{
-        const text = replies[Math.floor(Math.random()*replies.length)];
-        const row = await insertMessage(targetContact.id, senderName, {type:'text', text});
-        if(row) deliverMsg(targetContact, row);
-      }, 1100 + Math.random()*1200);
-      return;
-    }
-    setTimeout(async ()=>{
-      const text = replies[Math.floor(Math.random()*replies.length)];
-      const row = await insertMessage(targetContact.id, targetContact.name, {type:'text', text});
-      if(row) deliverMsg(targetContact, row);
-    }, 1100 + Math.random()*1200);
   }
 
   // ---------- TEXT INPUT ----------
@@ -2179,10 +1749,9 @@ body{
   function sendText(){
     const val = msgInput.value.trim();
     if(!val) return;
-    addMessage({from:'me', type:'text', text:val, ts:Date.now()});
+    addMessage({type:'text', text:val});
     msgInput.value=''; msgInput.style.height='auto';
     btnSend.style.display='none'; btnMic.style.display='flex';
-    autoReply();
   }
   btnSend.addEventListener('click', sendText);
   msgInput.addEventListener('keydown', e=>{
@@ -2231,8 +1800,7 @@ body{
         const reader = new FileReader();
         reader.onloadend = ()=>{
           const m = Math.floor(durSecs/60), s = durSecs%60;
-          addMessage({from:'me', type:'voice', audio: reader.result, duration: m+':'+s.toString().padStart(2,'0'), ts: Date.now()});
-          autoReply();
+          addMessage({type:'voice', audio: reader.result, duration: m+':'+s.toString().padStart(2,'0')});
         };
         reader.readAsDataURL(blob);
       }
@@ -2272,7 +1840,6 @@ body{
         });
       }
       await addMessage({type:'file', fileName:file.name, fileSize:file.size, mimeType:file.type, fileData});
-      autoReply();
     }catch(err){
       console.error(err);
       alert('שגיאה בשליחת הקובץ.');
@@ -2350,7 +1917,7 @@ body{
     document.getElementById('callVideoBg').srcObject = null;
     if(currentChat && callSeconds>0){
       const label = isVideoCall ? '📹 שיחת וידאו · ' : '📞 שיחה קולית · ';
-      addMessage({from:'me', type:'text', text:label+formatCallTime(callSeconds), ts:Date.now()});
+      addMessage({type:'text', text:label+formatCallTime(callSeconds)});
     }
   }
 
@@ -2378,8 +1945,8 @@ body{
   const myProfilePicker = setupImagePicker('myProfileAvatarFile','myProfileAvatarBtn','myProfileAvatarPreviewWrap','myProfileAvatarPreview','myProfileAvatarRemove');
 
   function openMyProfileModal(){
-    document.getElementById('myProfileName').value = me || '';
-    myProfilePicker.reset(myAvatar || null);
+    document.getElementById('myProfileName').value = me.name || '';
+    myProfilePicker.reset(me.avatar || null);
     document.getElementById('myProfileModal').classList.add('show');
   }
   document.getElementById('btnProfile').addEventListener('click', openMyProfileModal);
@@ -2388,28 +1955,27 @@ body{
   document.getElementById('myProfileCancel').addEventListener('click', ()=>{
     document.getElementById('myProfileModal').classList.remove('show');
   });
-  document.getElementById('myProfileConfirm').addEventListener('click', ()=>{
+  document.getElementById('myProfileConfirm').addEventListener('click', async ()=>{
     const newName = document.getElementById('myProfileName').value.trim();
     if(!newName){ alert('צריך להקליד שם.'); return; }
     const newAvatar = myProfilePicker.getData();
     try{
-      localStorage.setItem(LS_USER, newName);
-      if(newAvatar){ localStorage.setItem(LS_SELF_AVATAR, newAvatar); }
-      else{ localStorage.removeItem(LS_SELF_AVATAR); }
+      await apiPatch('users', {id: me.id, name: newName, avatar: newAvatar});
     }catch(err){
       console.error(err);
-      alert('שגיאה בשמירה - כנראה שאין מספיק מקום אחסון בדפדפן (התמונה כבדה מדי). נסה/י תמונה קטנה יותר או בלי תמונה.');
+      alert('שגיאה בשמירה - בדוק/י את חיבור ה-DB');
       return;
     }
-    me = newName;
-    myAvatar = newAvatar;
-    registerUser(me);
+    me.name = newName;
+    me.avatar = newAvatar;
+    saveMe();
     renderSelfAvatar();
     document.getElementById('myProfileModal').classList.remove('show');
   });
 
   boot();
 })();
+
 </script>
 </body>
 </html>
