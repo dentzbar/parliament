@@ -449,6 +449,21 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
 .switch-user-row .avatar{width:34px; height:34px; font-size:13px; flex-shrink:0;}
 .switch-user-row .su-name{font-size:14px; font-weight:500; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 .switch-user-empty{font-size:12.5px; color:var(--text-faint); text-align:center; padding:6px 2px;}
+.add-user-btn{
+  width:100%; display:flex; align-items:center; justify-content:center; gap:8px; margin-top:8px;
+  background:var(--panel2); border:1px dashed var(--line); color:var(--text-dim);
+  padding:11px 14px; border-radius:12px; font-family:var(--font-body); font-size:13.5px; cursor:pointer;
+}
+.add-user-btn:active{opacity:.7;}
+.add-user-btn svg{width:16px; height:16px; flex-shrink:0;}
+.add-user-row{display:none; gap:8px; margin-top:8px;}
+.add-user-row.show{display:flex;}
+.add-user-row input{margin-bottom:0 !important; flex:1; min-width:0;}
+.add-user-row button{
+  flex-shrink:0; padding:0 16px; border:none; border-radius:12px; cursor:pointer;
+  background:linear-gradient(135deg,var(--red-bright),var(--red)); color:#fff;
+  font-family:var(--font-display); font-weight:600; font-size:13.5px;
+}
 .sheet input:focus, .sheet select:focus, .sheet textarea:focus{border-color:var(--red-bright);}
 .sheet-buttons{display:flex; gap:10px; margin-top:8px;}
 .sheet-buttons button{flex:1; padding:13px; border-radius:13px; border:none; font-family:var(--font-display); font-weight:600; font-size:14px; cursor:pointer;}
@@ -747,6 +762,14 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
       <div class="switch-user-sec">
         <h3>החלפת משתמש</h3>
         <div id="switchUserList" class="switch-user-list"></div>
+        <button type="button" id="addUserBtn" class="add-user-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          <span>הוספת משתמש</span>
+        </button>
+        <div id="addUserRow" class="add-user-row">
+          <input id="addUserName" type="text" placeholder="שם המשתמש החדש" maxlength="20">
+          <button type="button" id="addUserConfirm">הוספה</button>
+        </div>
       </div>
     </div>
   </div>
@@ -2061,8 +2084,31 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
     document.getElementById('myProfileName').value = me.name || '';
     myProfilePicker.reset(me.avatar || null);
     document.getElementById('myProfileModal').classList.add('show');
+    document.getElementById('addUserRow').classList.remove('show');
+    document.getElementById('addUserBtn').style.display = '';
+    document.getElementById('addUserName').value = '';
     renderSwitchUserList();
   }
+  const addUserRow = document.getElementById('addUserRow');
+  const addUserNameEl = document.getElementById('addUserName');
+
+  document.getElementById('addUserBtn').addEventListener('click', ()=>{
+    addUserRow.classList.add('show');
+    document.getElementById('addUserBtn').style.display = 'none';
+    addUserNameEl.focus();
+  });
+
+  async function confirmAddUser(){
+    const name = addUserNameEl.value.trim();
+    if(!name){ alert('צריך להקליד שם.'); return; }
+    const user = await registerUser(name, null);
+    if(!user){ alert('שגיאה ביצירת המשתמש - בדוק/י את חיבור ה-DB'); return; }
+    addUserNameEl.value = '';
+    await switchUser(user);
+  }
+  document.getElementById('addUserConfirm').addEventListener('click', confirmAddUser);
+  addUserNameEl.addEventListener('keydown', e=>{ if(e.key === 'Enter') confirmAddUser(); });
+
   document.getElementById('btnProfile').addEventListener('click', openMyProfileModal);
   document.getElementById('selfProfileBtn').addEventListener('click', openMyProfileModal);
 
