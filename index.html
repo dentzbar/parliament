@@ -7,6 +7,10 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='110' fill='%23159a4a'/%3E%3Ccircle cx='256' cy='256' r='216' fill='%23fff'/%3E%3Ccircle cx='256' cy='256' r='196' fill='%23d0021b'/%3E%3Crect x='112' y='176' width='196' height='160' rx='46' fill='%23fff'/%3E%3Cpath d='M326 236l68-58v156l-68-58z' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+/* apply saved theme before first paint to avoid a flash */
+try{ document.documentElement.setAttribute('data-theme', localStorage.getItem('parliament_theme') || 'dark'); }catch(e){}
+</script>
 <style>
 :root{
   --red-deep:#5c0000;
@@ -25,6 +29,24 @@
   --bubble-them:#241313;
   --font-display:'Rubik',sans-serif;
   --font-body:'Heebo',sans-serif;
+}
+
+/* ---------- LIGHT THEME ---------- */
+html[data-theme="light"]{
+  --red-deep:#8a0000;
+  --red:#c40000;
+  --red-bright:#e01515;
+  --red-glow:#ff4d4d;
+  --bg:#fdf6f6;
+  --bg2:#fff;
+  --panel:#fff;
+  --panel2:#f6eaea;
+  --line: rgba(140,20,20,0.16);
+  --text:#1d0d0d;
+  --text-dim:#6d5151;
+  --text-faint:#9c8080;
+  --bubble-me: linear-gradient(135deg,#d41111,#a80000);
+  --bubble-them:#f1e3e3;
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 html,body{height:100%;}
@@ -110,6 +132,9 @@ body{
 }
 .icon-btn.notif-on{background:linear-gradient(135deg,var(--red-bright),var(--red)); border-color:transparent;}
 .icon-btn.emoji-btn{font-size:15px;}
+#btnTheme .sun{display:none;}
+html[data-theme="light"] #btnTheme .sun{display:block;}
+html[data-theme="light"] #btnTheme .moon{display:none;}
 
 #contactsScreen{position:absolute; inset:0; display:flex; flex-direction:column; z-index:1;}
 
@@ -507,6 +532,10 @@ body{
       <h1>פרלמנט</h1>
       <div class="icon-btn emoji-btn" id="btnAllFiles">📁</div>
       <div class="icon-btn emoji-btn" id="btnShowcase">🎛️</div>
+      <div class="icon-btn" id="btnTheme" title="מצב תצוגה">
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg>
+      </div>
       <div class="icon-btn" id="btnNotifPerm">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
         <span class="notif-dot" id="notifDot" style="display:none;"></span>
@@ -954,6 +983,17 @@ body{
     btn.classList.toggle('notif-on', notifOn);
     dot.style.display = notifOn ? 'none' : 'block';
   }
+
+  /* ---------- THEME ---------- */
+  const LS_THEME = 'parliament_theme';
+  function applyTheme(t){
+    document.documentElement.setAttribute('data-theme', t);
+    localStorage.setItem(LS_THEME, t);
+  }
+  document.getElementById('btnTheme').addEventListener('click', () => {
+    const cur = document.documentElement.getAttribute('data-theme');
+    applyTheme(cur === 'light' ? 'dark' : 'light');
+  });
 
   document.getElementById('btnNotifPerm').addEventListener('click', toggleNotifPerm);
 
