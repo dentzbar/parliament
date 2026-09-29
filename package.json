@@ -1,7 +1,7 @@
 {
   "name": "parliament",
   "version": "1.0.0",
-  "description": "פרלמנט — chat between friends (Hebrew)",
+  "description": "מיונג'ט — chat between friends (Hebrew)",
   "private": true,
   "type": "module",
   "dependencies": {

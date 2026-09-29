@@ -1,4 +1,4 @@
--- פרלמנט — Neon (Postgres) schema
+-- מיונג'ט — Neon (Postgres) schema
 -- Run this once against your Neon database (Neon Console → SQL Editor, or `psql "$DATABASE_URL" -f schema.sql`).
 
 -- App users. Everyone who has ever entered a name. Chat is strictly user-to-user —

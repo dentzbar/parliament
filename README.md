@@ -1,4 +1,4 @@
-# פרלמנט (Parliament)
+# מיונג'ט (mionjet)
 
 צ'אט בין חברים — Hebrew, RTL chat, strictly user-to-user. On entry, pick an existing user or create a new one; message any other user directly with text, voice, or file messages. Includes a community showcase feed. Deployed on Vercel, data stored in Neon (PostgreSQL).
 
