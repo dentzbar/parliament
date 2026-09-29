@@ -263,6 +263,7 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
 .info-file-row{display:flex; align-items:center; gap:10px; padding:9px 0; text-decoration:none; color:inherit; border-bottom:1px solid var(--line);}
 .info-file-row:last-child{border-bottom:none;}
 .info-file-row .file-icon{font-size:22px;}
+.info-file-row .file-icon svg{width:22px; height:22px; display:block;}
 .info-file-row .file-info{flex:1; min-width:0; display:flex; flex-direction:column; gap:1px;}
 .info-file-row .file-name{font-size:13.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 .info-file-row .file-size{font-size:11px; color:var(--text-faint);}
@@ -298,6 +299,7 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
   display:flex; align-items:center; gap:10px; min-width:190px; max-width:240px; text-decoration:none; color:inherit;
 }
 .file-icon{font-size:26px; flex-shrink:0;}
+.file-icon svg{width:26px; height:26px; display:block;}
 .file-info{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;}
 .file-name{font-size:13.5px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 .file-size{font-size:11px; opacity:.7;}
@@ -622,8 +624,12 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
       </div>
       <div class="input-bar" id="inputBar">
         <input type="file" id="fileInput" class="visually-hidden-input">
-        <button class="round-btn" id="btnAttach">
+        <input type="file" id="docInput" class="visually-hidden-input" accept=".pdf,.doc,.docx,.txt,.rtf,.ppt,.pptx,.xls,.xlsx,.csv,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,text/plain,text/csv">
+        <button class="round-btn" id="btnAttach" title="שליחת קובץ">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.4 11.1l-9.2 9.2a5 5 0 0 1-7.1-7.1l9.2-9.2a3.5 3.5 0 0 1 5 5l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5"/></svg>
+        </button>
+        <button class="round-btn" id="btnDoc" title="שליחת מסמך">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><line x1="8" y1="9" x2="11" y2="9"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="8" y1="18" x2="14" y2="18"/></svg>
         </button>
         <div class="input-pill"><textarea id="msgInput" placeholder="הקלד/י הודעה..." rows="1"></textarea></div>
         <button class="round-btn mic" id="btnMic">
@@ -1690,14 +1696,14 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
     wrap.scrollTop = wrap.scrollHeight;
   }
 
+  const DOC_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><line x1="8" y1="9" x2="11" y2="9"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="8" y1="18" x2="14" y2="18"/></svg>';
+
   function fileIconFor(mime, name){
     const ext = (name||'').split('.').pop().toLowerCase();
     if((mime||'').startsWith('image/')) return '🖼️';
     if((mime||'').startsWith('video/')) return '🎬';
     if((mime||'').startsWith('audio/')) return '🎵';
-    if(ext==='pdf') return '📕';
-    if(['doc','docx'].includes(ext)) return '📄';
-    if(['xls','xlsx','csv'].includes(ext)) return '📊';
+    if(['pdf','doc','docx','txt','rtf','ppt','pptx','xls','xlsx','csv'].includes(ext)) return DOC_ICON_SVG;
     if(['zip','rar','7z'].includes(ext)) return '🗜️';
     return '📎';
   }
@@ -1891,18 +1897,12 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
 
   // ---------- FILE SHARING ----------
   const MAX_FILE_MB = 20;
-  document.getElementById('btnAttach').addEventListener('click', ()=>{
-    document.getElementById('fileInput').click();
-  });
-  document.getElementById('fileInput').addEventListener('change', async (e)=>{
-    const file = e.target.files && e.target.files[0];
-    if(!file || !currentChat){ e.target.value=''; return; }
+  async function handleAttachedFile(file){
+    if(!file || !currentChat) return;
     if(file.size > MAX_FILE_MB*1024*1024){
       alert('הקובץ גדול מדי (מקסימום '+MAX_FILE_MB+'MB). לסרטונים ארוכים, כדאי לשלוח קליפ קצר יותר.');
-      e.target.value='';
       return;
     }
-    e.target.value='';
     const isImage = (file.type||'').startsWith('image/');
     try{
       let fileData;
@@ -1921,6 +1921,22 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
       console.error(err);
       alert('שגיאה בשליחת הקובץ.');
     }
+  }
+  document.getElementById('btnAttach').addEventListener('click', ()=>{
+    document.getElementById('fileInput').click();
+  });
+  document.getElementById('fileInput').addEventListener('change', (e)=>{
+    const file = e.target.files && e.target.files[0];
+    e.target.value='';
+    handleAttachedFile(file);
+  });
+  document.getElementById('btnDoc').addEventListener('click', ()=>{
+    document.getElementById('docInput').click();
+  });
+  document.getElementById('docInput').addEventListener('change', (e)=>{
+    const file = e.target.files && e.target.files[0];
+    e.target.value='';
+    handleAttachedFile(file);
   });
 
   // ---------- CALLS ----------
