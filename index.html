@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>מיונג'ט</title>
+<title>mionjet</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='110' fill='%23159a4a'/%3E%3Ccircle cx='256' cy='256' r='216' fill='%23fff'/%3E%3Ccircle cx='256' cy='256' r='196' fill='%23d0021b'/%3E%3Crect x='112' y='176' width='196' height='160' rx='46' fill='%23fff'/%3E%3Cpath d='M326 236l68-58v156l-68-58z' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -533,7 +533,7 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
       <path d="M326 236l68-58v156l-68-58z" fill="#fff"/>
       <defs><linearGradient id="g1" x1="120" y1="80" x2="400" y2="440" gradientUnits="userSpaceOnUse"><stop stop-color="#e8272c"/><stop offset="1" stop-color="#b3000f"/></linearGradient></defs>
     </svg>
-    <h1>ברוכים הבאים למיונג'ט</h1>
+    <h1>ברוכים הבאים ל-mionjet</h1>
     <p>בחר/י את עצמך מהרשימה, או הקלד/י שם חדש כדי להצטרף.</p>
     <div id="obUserList" class="ob-user-list"></div>
     <div id="obDivider" class="ob-divider" style="display:none;">או</div>
@@ -552,7 +552,7 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
       <path d="M326 236l68-58v156l-68-58z" fill="#fff"/>
       <defs><linearGradient id="gh" x1="120" y1="80" x2="400" y2="440" gradientUnits="userSpaceOnUse"><stop stop-color="#e8272c"/><stop offset="1" stop-color="#b3000f"/></linearGradient></defs>
       </svg>
-      <h1>מיונג'ט</h1>
+      <h1>mionjet</h1>
       <div class="icon-btn emoji-btn" id="btnAllFiles">📁</div>
       <div class="icon-btn emoji-btn" id="btnShowcase">🎛️</div>
       <div class="icon-btn" id="btnTheme" title="מצב תצוגה">
@@ -967,7 +967,7 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
     if(!notifOn || !('Notification' in window) || Notification.permission!=='granted') return;
     if(document.visibilityState==='visible') return;
     try{
-      const n = new Notification('מיונג\'ט · '+user.name, {body:text, tag:'parliament-'+user.id});
+      const n = new Notification('mionjet · '+user.name, {body:text, tag:'parliament-'+user.id});
       n.onclick = ()=>{ window.focus(); n.close(); };
     }catch(e){}
   }
@@ -998,7 +998,7 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
     if(perm === 'granted'){
       notifOn = true;
       localStorage.setItem(LS_NOTIF_PREF, '1');
-      showToast({id:'system', name:'מיונג\'ט'}, 'התראות הופעלו בהצלחה 🔔');
+      showToast({id:'system', name:'mionjet'}, 'התראות הופעלו בהצלחה 🔔');
     } else {
       notifOn = false;
       localStorage.setItem(LS_NOTIF_PREF, '0');
