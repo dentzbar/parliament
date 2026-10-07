@@ -1034,9 +1034,13 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
   document.getElementById('btnNotifPerm').addEventListener('click', toggleNotifPerm);
 
   document.addEventListener('visibilitychange', ()=>{
-    if(document.visibilityState==='visible' && currentChat && document.getElementById('chatScreen').classList.contains('open')){
+    if(document.visibilityState!=='visible') return;
+    if(currentChat && document.getElementById('chatScreen').classList.contains('open')){
       markRead(currentChat.id);
     }
+    // catch up right away on what was skipped while hidden
+    if(pollChatInt) pollOpenChat();
+    if(pollListInt) pollUserListPreviews();
   });
 
   // Delivers an incoming message to a user's thread, handling read-state & notifications.
@@ -1065,9 +1069,11 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
   // ---------- REALTIME (polling) ----------
   // Neon has no browser-safe realtime channel, so we poll periodically instead:
   // the open chat thread refreshes often, the user list (for previews) less often.
+  // Polls are skipped while the tab is hidden so idle tabs let Neon's compute scale to zero.
   let pollChatInt = null, pollListInt = null;
 
   async function pollOpenChat(){
+    if(document.hidden) return;
     if(!currentChat || !document.getElementById('chatScreen').classList.contains('open')) return;
     const otherId = currentChat.id;
     const prevCount = (messagesCache[otherId]||[]).length;
@@ -1081,6 +1087,7 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
   }
 
   async function pollUserListPreviews(){
+    if(document.hidden) return;
     if(document.getElementById('chatScreen').classList.contains('open')) return;
     await loadUsers();
     renderUserList();
