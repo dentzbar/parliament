@@ -47,5 +47,17 @@ create table if not exists showcase (
 
 create index if not exists showcase_created_idx on showcase (created_at desc);
 
+-- Shopping lists (רשימת קניות) — one list per user per day; each row is one item.
+create table if not exists shopping_items (
+  id         bigint generated always as identity primary key,
+  user_id    integer not null references users(id) on delete cascade,
+  list_date  date not null,
+  text       text not null,
+  done       boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists shopping_items_user_date_idx on shopping_items (user_id, list_date, created_at);
+
 -- The serverless functions connect directly with the Neon connection string; no RLS needed
 -- (this is a small friends app, same trust model as before).

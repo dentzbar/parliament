@@ -120,7 +120,7 @@ body{
   flex-shrink:0;
 }
 .topbar .title-logo{width:30px; height:30px; border-radius:8px; flex-shrink:0;}
-.topbar h1{font-family:var(--font-display); font-size:19px; font-weight:700; margin:0 4px 0 0; flex:1; min-width:0;}
+.topbar h1{font-family:var(--font-display); font-size:19px; font-weight:700; margin:0 4px 0 0; flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 .icon-btn{
   width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center;
   background:var(--panel); border:1px solid var(--line); cursor:pointer; flex-shrink:0; position:relative;
@@ -227,6 +227,41 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
 }
 .add-user-fab:active{opacity:.8;}
 .add-user-fab svg{width:24px; height:24px;}
+
+/* ---------- SHOPPING LIST ---------- */
+.shop-days{display:flex; gap:8px; overflow-x:auto; padding:12px 14px; flex-shrink:0; border-bottom:1px solid var(--line); scrollbar-width:none;}
+.shop-days::-webkit-scrollbar{display:none;}
+.shop-day{
+  position:relative; flex-shrink:0; min-width:54px; padding:8px 6px; border-radius:14px; cursor:pointer;
+  background:var(--panel); border:1px solid var(--line); color:var(--text); font-family:var(--font-body);
+  display:flex; flex-direction:column; align-items:center; gap:2px;
+}
+.shop-day .dname{font-size:11px; color:var(--text-faint);}
+.shop-day .dnum{font-family:var(--font-display); font-size:17px; font-weight:700;}
+.shop-day.active{background:linear-gradient(135deg,var(--red-bright),var(--red)); border-color:transparent; color:#fff;}
+.shop-day.active .dname{color:rgba(255,255,255,.8);}
+.shop-day .dbadge{position:absolute; top:-4px; left:-4px; min-width:18px; height:18px; padding:0 5px; border-radius:9px;
+  background:var(--red-bright); color:#fff; font-size:10.5px; font-weight:700; display:flex; align-items:center; justify-content:center; border:2px solid var(--bg);}
+.shop-day.active .dbadge{background:#fff; color:var(--red);}
+.shop-day.pick{justify-content:center; font-size:20px;}
+.shop-day.pick input{position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%;}
+.shop-date-title{padding:12px 18px 4px; font-family:var(--font-display); font-weight:600; font-size:15px; flex-shrink:0;}
+.shop-date-sub{padding:0 18px 8px; font-size:12px; color:var(--text-faint); flex-shrink:0;}
+#shopList{flex:1; overflow-y:auto; padding:4px 12px 20px;}
+.shop-item{display:flex; align-items:center; gap:12px; padding:11px 8px; border-bottom:1px solid var(--line);}
+.shop-check{
+  width:24px; height:24px; border-radius:8px; border:2px solid var(--red-bright); background:none; cursor:pointer;
+  flex-shrink:0; display:flex; align-items:center; justify-content:center; padding:0; color:#fff;
+}
+.shop-check svg{width:14px; height:14px; display:none;}
+.shop-item.done .shop-check{background:var(--red-bright);}
+.shop-item.done .shop-check svg{display:block;}
+.shop-text{flex:1; min-width:0; font-size:15px; word-wrap:break-word;}
+.shop-item.done .shop-text{text-decoration:line-through; color:var(--text-faint);}
+.shop-del{background:none; border:none; color:var(--text-faint); cursor:pointer; padding:4px; display:flex;}
+.shop-del svg{width:16px; height:16px;}
+#shopInput{width:100%; background:none; border:none; outline:none; color:var(--text); font-family:var(--font-body); font-size:14.5px;}
+#shopInput::placeholder{color:var(--text-faint);}
 
 /* ---------- CHAT SCREEN ---------- */
 .chat-header{
@@ -557,6 +592,7 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
       <h1>mionjet</h1>
       <div class="icon-btn emoji-btn" id="btnAllFiles">📁</div>
       <div class="icon-btn emoji-btn" id="btnShowcase">🎛️</div>
+      <div class="icon-btn emoji-btn" id="btnShopping" title="רשימת קניות">🛒</div>
       <div class="icon-btn" id="btnTheme" title="מצב תצוגה">
         <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
         <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg>
@@ -655,6 +691,28 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
       <button class="fab" id="btnAddWork">
         <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
       </button>
+    </div>
+
+    <div class="screen" id="shoppingScreen">
+      <div class="chat-header">
+        <div class="icon-btn" id="btnShoppingBack">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+        </div>
+        <div class="chat-header-info">
+          <div class="chat-header-name">רשימת קניות 🛒</div>
+          <div class="chat-header-status">בוחרים יום ורושמים מה לקנות בסופר</div>
+        </div>
+      </div>
+      <div class="shop-days" id="shopDays"></div>
+      <div class="shop-date-title" id="shopDateTitle"></div>
+      <div class="shop-date-sub" id="shopDateSub"></div>
+      <div id="shopList"></div>
+      <form class="input-bar" id="shopForm">
+        <div class="input-pill"><input id="shopInput" type="text" placeholder="מה צריך לקנות?" maxlength="200" autocomplete="off"></div>
+        <button type="submit" class="round-btn send" title="הוספה">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+      </form>
     </div>
 
     <div class="screen" id="allFilesScreen">
@@ -1539,6 +1597,172 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
     document.getElementById('showcaseScreen').classList.remove('open');
   });
 
+  // ---------- SHOPPING LIST (רשימת קניות) ----------
+  // One list per user per day. Dates are local YYYY-MM-DD strings (never via toISOString, which shifts to UTC).
+  const HEB_DAYS = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+  let shopDate = null;
+  let shopItems = [];
+  let shopSummary = {}; // date -> {total, remaining}
+
+  function ymd(d){
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  function parseYmd(s){ const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); }
+  function shopDayLabel(s){
+    const today = ymd(new Date());
+    const tomorrow = ymd(new Date(Date.now()+86400000));
+    if(s===today) return 'היום';
+    if(s===tomorrow) return 'מחר';
+    return 'יום '+HEB_DAYS[parseYmd(s).getDay()];
+  }
+
+  function renderShopDays(){
+    const wrap = document.getElementById('shopDays');
+    // next 14 days, plus any earlier/later day that already has a list
+    const days = new Set();
+    const now = new Date();
+    for(let i=0;i<14;i++) days.add(ymd(new Date(now.getFullYear(), now.getMonth(), now.getDate()+i)));
+    Object.keys(shopSummary).forEach(d=>{ if(shopSummary[d].remaining>0 || d>=ymd(now)) days.add(d); });
+    if(shopDate) days.add(shopDate);
+    const sorted = [...days].sort();
+
+    wrap.innerHTML = '';
+    sorted.forEach(d=>{
+      const dt = parseYmd(d);
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'shop-day'+(d===shopDate?' active':'');
+      const rem = shopSummary[d] ? shopSummary[d].remaining : 0;
+      const name = d===ymd(now) ? 'היום' : HEB_DAYS[dt.getDay()];
+      btn.innerHTML = `<span class="dname">${name}</span><span class="dnum">${dt.getDate()}/${dt.getMonth()+1}</span>`
+        + (rem ? `<span class="dbadge">${rem}</span>` : '');
+      btn.addEventListener('click', ()=> selectShopDate(d));
+      wrap.appendChild(btn);
+    });
+
+    // free date picker for any other day
+    const pick = document.createElement('label');
+    pick.className = 'shop-day pick';
+    pick.title = 'בחירת תאריך אחר';
+    pick.innerHTML = '📅<input type="date">';
+    pick.querySelector('input').addEventListener('change', e=>{ if(e.target.value) selectShopDate(e.target.value); });
+    wrap.appendChild(pick);
+
+    const active = wrap.querySelector('.shop-day.active');
+    if(active) active.scrollIntoView({block:'nearest', inline:'center'});
+  }
+
+  function renderShopList(){
+    const dt = parseYmd(shopDate);
+    document.getElementById('shopDateTitle').textContent =
+      shopDayLabel(shopDate)+' · '+dt.getDate()+'/'+(dt.getMonth()+1)+'/'+dt.getFullYear();
+    const remaining = shopItems.filter(i=>!i.done).length;
+    document.getElementById('shopDateSub').textContent = shopItems.length
+      ? `${remaining} נשארו מתוך ${shopItems.length}`
+      : 'הרשימה ריקה — הוסיפו פריט למטה';
+
+    const list = document.getElementById('shopList');
+    list.innerHTML = '';
+    // unchecked first, checked sink to the bottom
+    [...shopItems].sort((a,b)=> a.done-b.done).forEach(item=>{
+      const row = document.createElement('div');
+      row.className = 'shop-item'+(item.done?' done':'');
+      row.innerHTML = `
+        <button type="button" class="shop-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></button>
+        <div class="shop-text">${escapeHtml(item.text)}</div>
+        <button type="button" class="shop-del" title="מחיקה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>`;
+      row.querySelector('.shop-check').addEventListener('click', ()=> toggleShopItem(item));
+      row.querySelector('.shop-text').addEventListener('click', ()=> toggleShopItem(item));
+      row.querySelector('.shop-del').addEventListener('click', ()=> deleteShopItem(item));
+      list.appendChild(row);
+    });
+  }
+
+  function syncShopSummary(){
+    shopSummary[shopDate] = {total: shopItems.length, remaining: shopItems.filter(i=>!i.done).length};
+    if(!shopItems.length) delete shopSummary[shopDate];
+    renderShopDays();
+  }
+
+  async function loadShopSummary(){
+    try{
+      const rows = await apiGet('shopping?user_id='+me.id);
+      shopSummary = {};
+      rows.forEach(r=>{ shopSummary[r.date] = {total:r.total, remaining:r.remaining}; });
+    }catch(err){ console.error(err); }
+  }
+
+  async function selectShopDate(d){
+    shopDate = d;
+    shopItems = [];
+    renderShopDays();
+    document.getElementById('shopList').innerHTML = '<div class="day-divider" style="display:table;margin:20px auto;">טוען...</div>';
+    try{
+      const items = await apiGet('shopping?user_id='+me.id+'&date='+d);
+      if(shopDate!==d) return; // user picked another day meanwhile
+      shopItems = items;
+    }catch(err){
+      console.error(err);
+      alert('שגיאה בטעינת הרשימה');
+    }
+    renderShopList();
+  }
+
+  async function toggleShopItem(item){
+    item.done = !item.done;
+    renderShopList(); syncShopSummary();
+    try{
+      await apiPatch('shopping', {id: Number(item.id), done: item.done});
+    }catch(err){
+      console.error(err);
+      item.done = !item.done;
+      renderShopList(); syncShopSummary();
+      alert('שגיאה בעדכון הפריט');
+    }
+  }
+
+  async function deleteShopItem(item){
+    const prev = shopItems;
+    shopItems = shopItems.filter(i=>i!==item);
+    renderShopList(); syncShopSummary();
+    try{
+      await apiDelete('shopping?id='+item.id);
+    }catch(err){
+      console.error(err);
+      shopItems = prev;
+      renderShopList(); syncShopSummary();
+      alert('שגיאה במחיקת הפריט');
+    }
+  }
+
+  document.getElementById('shopForm').addEventListener('submit', async e=>{
+    e.preventDefault();
+    const input = document.getElementById('shopInput');
+    const text = input.value.trim();
+    if(!text || !shopDate) return;
+    input.value = '';
+    const date = shopDate;
+    try{
+      const item = await apiPost('shopping', {user_id: me.id, date, text});
+      if(shopDate===date){ shopItems.push(item); renderShopList(); syncShopSummary(); }
+    }catch(err){
+      console.error(err);
+      input.value = text;
+      alert('שגיאה בהוספת הפריט');
+    }
+    input.focus();
+  });
+
+  document.getElementById('btnShopping').addEventListener('click', async ()=>{
+    document.getElementById('shoppingScreen').classList.add('open');
+    shopDate = shopDate || ymd(new Date());
+    await loadShopSummary();
+    await selectShopDate(shopDate);
+  });
+  document.getElementById('btnShoppingBack').addEventListener('click', ()=>{
+    document.getElementById('shoppingScreen').classList.remove('open');
+  });
+
   // ---------- ALL FILES (FOLDERS) ----------
   let allFilesView = 'list'; // 'list' | 'folder'
 
@@ -2052,7 +2276,9 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
     document.getElementById('chatScreen').classList.remove('open');
     document.getElementById('contactInfoScreen').classList.remove('open');
     document.getElementById('showcaseScreen').classList.remove('open');
+    document.getElementById('shoppingScreen').classList.remove('open');
     document.getElementById('allFilesScreen').classList.remove('open');
+    shopDate = null; shopSummary = {};
     document.getElementById('myProfileModal').classList.remove('show');
 
     // unread counters belong to the previous user
