@@ -465,10 +465,29 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
 .call-btn.active{background:#fff; color:#a80000;}
 
 /* ---------- MODALS (SHEETS) ---------- */
-#shareWorkModal, #myProfileModal{
+#shareWorkModal, #myProfileModal, #groupModal{
   position:absolute; inset:0; z-index:55; display:none; align-items:flex-end; background:rgba(0,0,0,.55);
 }
-#shareWorkModal.show, #myProfileModal.show{display:flex;}
+#shareWorkModal.show, #myProfileModal.show, #groupModal.show{display:flex;}
+.member-pick-list{max-height:240px; overflow-y:auto; display:flex; flex-direction:column; gap:6px; margin-bottom:10px;}
+.member-pick-row{
+  display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:12px;
+  background:var(--panel2); border:1px solid var(--line); cursor:pointer;
+}
+.member-pick-row.selected{border-color:var(--red-bright);}
+.member-pick-row .avatar{width:34px; height:34px; font-size:13px; flex-shrink:0;}
+.member-pick-row .su-name{font-size:14px; font-weight:500; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.member-pick-row .shop-check{pointer-events:none;}
+.member-pick-row.selected .shop-check{background:var(--red-bright);}
+.member-pick-row.selected .shop-check svg{display:block;}
+.info-member-row{display:flex; align-items:center; gap:10px; padding:7px 0;}
+.info-member-row .avatar{width:34px; height:34px; font-size:13px;}
+.info-member-row .su-name{flex:1; font-size:14px;}
+.info-member-row .me-tag{font-size:11px; color:var(--text-faint);}
+.info-leave-btn{
+  width:100%; padding:12px; border-radius:13px; border:1px solid var(--red-bright); background:none;
+  color:var(--red-bright); font-family:var(--font-display); font-weight:600; font-size:14px; cursor:pointer;
+}
 .sheet{
   width:100%; background:var(--panel); border-radius:22px 22px 0 0; padding:22px 20px 30px;
   animation:sheetup .28s ease;
@@ -590,6 +609,7 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
       <defs><linearGradient id="gh" x1="120" y1="80" x2="400" y2="440" gradientUnits="userSpaceOnUse"><stop stop-color="#e8272c"/><stop offset="1" stop-color="#b3000f"/></linearGradient></defs>
       </svg>
       <h1>mionjet</h1>
+      <div class="icon-btn emoji-btn" id="btnNewGroup" title="קבוצה חדשה">👥</div>
       <div class="icon-btn emoji-btn" id="btnAllFiles">📁</div>
       <div class="icon-btn emoji-btn" id="btnShowcase">🎛️</div>
       <div class="icon-btn emoji-btn" id="btnShopping" title="רשימת קניות">🛒</div>
@@ -734,7 +754,7 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
         </div>
         <div class="chat-header-info">
-          <div class="chat-header-name">פרטי משתמש</div>
+          <div class="chat-header-name" id="contactInfoTitle">פרטי משתמש</div>
         </div>
       </div>
       <div id="contactInfoBody"></div>
@@ -798,6 +818,19 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
       <div class="sheet-buttons">
         <button class="cancel" id="swCancel">ביטול</button>
         <button class="confirm" id="swConfirm">שיתוף</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GROUP MODAL (create group / add members) -->
+  <div id="groupModal">
+    <div class="sheet">
+      <h2 id="groupModalTitle">קבוצה חדשה</h2>
+      <input id="groupName" type="text" placeholder="שם הקבוצה" maxlength="40">
+      <div id="groupMemberList" class="member-pick-list"></div>
+      <div class="sheet-buttons">
+        <button class="cancel" id="groupCancel">ביטול</button>
+        <button class="confirm" id="groupConfirm">יצירה</button>
       </div>
     </div>
   </div>
@@ -868,11 +901,21 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
   }
 
   let users = [];          // everyone except me, id -> row
-  let currentChat = null;  // the user object I'm chatting with
+  let groups = [];         // groups I'm a member of: {id, name, avatar, isGroup:true, memberIds}
+  let currentChat = null;  // the user or group object I'm chatting with
   let mediaRecorder = null, recChunks = [], recStart = 0, recTimerInt = null, recStream = null;
   let callTimerInt = null, callSeconds = 0, callTargetName = '';
-  const messagesCache = {}; // user_id -> rendered message objects
-  const lastPreview = {};   // user_id -> {text, time, ts}
+  // Per-chat state is keyed by chatKey(): a user's numeric id, or 'g'+id for a group
+  // (users keep their bare id so existing localStorage unread/background entries stay valid).
+  const messagesCache = {}; // chatKey -> rendered message objects
+  const lastPreview = {};   // chatKey -> {text, time, ts}
+
+  function chatKey(chat){ return chat.isGroup ? 'g'+chat.id : chat.id; }
+
+  function userById(id){
+    if(me && id===me.id) return me;
+    return users.find(u=> u.id===id) || null;
+  }
 
   function initials(name){
     const parts = (name||'').trim().split(' ').filter(Boolean);
@@ -925,26 +968,39 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
     return (bytes/(1024*1024)).toFixed(1)+' MB';
   }
 
-  async function fetchMessages(otherId){
+  async function fetchMessages(chat){
+    const key = chatKey(chat);
     let data;
     try{
-      data = await apiGet('messages?user_id='+me.id+'&with_id='+otherId);
+      data = await apiGet('messages?user_id='+me.id+(chat.isGroup ? '&group_id=' : '&with_id=')+chat.id);
     }catch(err){
       console.error(err);
       return [];
     }
     const msgs = data.map(rowToMsg);
-    messagesCache[otherId] = msgs;
+    messagesCache[key] = msgs;
     if(msgs.length){
       const last = msgs[msgs.length-1];
-      lastPreview[otherId] = {text: msgPreviewText(last), time: fmtTime(last.ts), ts:last.ts};
+      lastPreview[key] = {text: previewFor(chat, last), time: fmtTime(last.ts), ts:last.ts};
     }
     return msgs;
   }
 
-  async function insertMessage(recipientId, payload){
+  // List/toast preview; in groups, prefix with the sender's name.
+  function previewFor(chat, m){
+    const text = msgPreviewText(m);
+    if(!chat.isGroup) return text;
+    if(m.senderId===me.id) return 'את/ה: '+text;
+    const sender = userById(m.senderId);
+    return (sender ? sender.name : '?')+': '+text;
+  }
+
+  async function insertMessage(chat, payload){
     const row = {
-      sender_id: me.id, recipient_id: recipientId, type: payload.type,
+      sender_id: me.id,
+      recipient_id: chat.isGroup ? null : chat.id,
+      group_id: chat.isGroup ? chat.id : null,
+      type: payload.type,
       content: payload.text || null, audio_data: payload.audio || null, duration: payload.duration || null,
       file_name: payload.fileName || null, file_size: payload.fileSize || null, mime_type: payload.mimeType || null, file_data: payload.fileData || null
     };
@@ -958,11 +1014,12 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
     }
   }
 
-  async function deleteMessage(otherId, m){
+  async function deleteMessage(chat, m){
     if(m.id==null) return;
     const label = m.type==='voice' ? 'ההודעה הקולית' : m.type==='file' ? 'הקובץ' : 'ההודעה';
     if(!confirm('למחוק את '+label+'?')) return;
-    const arr = messagesCache[otherId] || [];
+    const key = chatKey(chat);
+    const arr = messagesCache[key] || [];
     const idx = arr.findIndex(x=> x.id===m.id);
     if(idx>-1) arr.splice(idx,1);
     try{
@@ -973,9 +1030,9 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
     }
     if(arr.length){
       const last = arr[arr.length-1];
-      lastPreview[otherId] = {text: msgPreviewText(last), time: fmtTime(last.ts), ts:last.ts};
+      lastPreview[key] = {text: previewFor(chat, last), time: fmtTime(last.ts), ts:last.ts};
     } else {
-      delete lastPreview[otherId];
+      delete lastPreview[key];
     }
     renderMessages();
     renderUserList();
@@ -989,8 +1046,8 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
 
   function saveUnread(){ localStorage.setItem(LS_UNREAD, JSON.stringify(unread)); }
 
-  function markRead(otherId){
-    if(unread[otherId]){ delete unread[otherId]; saveUnread(); renderUserList(); }
+  function markRead(key){
+    if(unread[key]){ delete unread[key]; saveUnread(); renderUserList(); }
   }
 
   function playPing(){
@@ -1017,7 +1074,8 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
       </div>`;
     t.addEventListener('click', ()=>{
       t.remove();
-      document.getElementById('chatScreen').classList.contains('open') && currentChat && currentChat.id===user.id ? null : openChat(user);
+      if(user.id==='system') return;
+      document.getElementById('chatScreen').classList.contains('open') && currentChat && chatKey(currentChat)===chatKey(user) ? null : openChat(user);
     });
     stack.appendChild(t);
     requestAnimationFrame(()=> t.classList.add('in'));
@@ -1031,7 +1089,7 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
     if(!notifOn || !('Notification' in window) || Notification.permission!=='granted') return;
     if(document.visibilityState==='visible') return;
     try{
-      const n = new Notification('mionjet · '+user.name, {body:text, tag:'parliament-'+user.id});
+      const n = new Notification('mionjet · '+user.name, {body:text, tag:'parliament-'+chatKey(user)});
       n.onclick = ()=>{ window.focus(); n.close(); };
     }catch(e){}
   }
@@ -1094,32 +1152,33 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
   document.addEventListener('visibilitychange', ()=>{
     if(document.visibilityState!=='visible') return;
     if(currentChat && document.getElementById('chatScreen').classList.contains('open')){
-      markRead(currentChat.id);
+      markRead(chatKey(currentChat));
     }
     // catch up right away on what was skipped while hidden
     if(pollChatInt) pollOpenChat();
     if(pollListInt) pollUserListPreviews();
   });
 
-  // Delivers an incoming message to a user's thread, handling read-state & notifications.
-  function deliverMsg(user, msg){
-    if(!messagesCache[user.id]) messagesCache[user.id] = [];
-    messagesCache[user.id].push(msg);
-    lastPreview[user.id] = {text: msgPreviewText(msg), time: fmtTime(msg.ts), ts: msg.ts};
+  // Delivers an incoming message to a user/group thread, handling read-state & notifications.
+  function deliverMsg(chat, msg){
+    const key = chatKey(chat);
+    if(!messagesCache[key]) messagesCache[key] = [];
+    messagesCache[key].push(msg);
+    const preview = previewFor(chat, msg);
+    lastPreview[key] = {text: preview, time: fmtTime(msg.ts), ts: msg.ts};
 
-    const chatOpenAndVisible = currentChat && currentChat.id===user.id
+    const chatOpenAndVisible = currentChat && chatKey(currentChat)===key
       && document.getElementById('chatScreen').classList.contains('open')
       && document.visibilityState==='visible';
 
     if(chatOpenAndVisible){
       renderMessages();
     } else {
-      unread[user.id] = (unread[user.id]||0)+1;
+      unread[key] = (unread[key]||0)+1;
       saveUnread();
       renderUserList();
-      const preview = msgPreviewText(msg);
-      showToast(user, preview);
-      sendBrowserNotification(user, preview);
+      showToast(chat, preview);
+      sendBrowserNotification(chat, preview);
       playPing();
     }
   }
@@ -1133,14 +1192,15 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
   async function pollOpenChat(){
     if(document.hidden) return;
     if(!currentChat || !document.getElementById('chatScreen').classList.contains('open')) return;
-    const otherId = currentChat.id;
-    const prevCount = (messagesCache[otherId]||[]).length;
-    const msgs = await fetchMessages(otherId);
+    const chat = currentChat;
+    const key = chatKey(chat);
+    const prevCount = (messagesCache[key]||[]).length;
+    const msgs = await fetchMessages(chat);
     if(msgs.length > prevCount){
       const newOnes = msgs.slice(prevCount).filter(m=> m.senderId !== me.id);
       renderMessages();
-      newOnes.forEach(m=> deliverMsg(currentChat, m));
-      markRead(otherId);
+      newOnes.forEach(m=> deliverMsg(chat, m));
+      markRead(key);
     }
   }
 
@@ -1169,8 +1229,23 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
       return;
     }
     users = data.filter(u=> u.id !== me.id);
+    await loadGroups();
     // fetch last-message previews for the list
-    await Promise.all(users.map(u=> fetchMessages(u.id)));
+    await Promise.all([...groups, ...users].map(c=> fetchMessages(c)));
+  }
+
+  function rowToGroup(row){
+    return {id: row.id, name: row.name, avatar: row.avatar, isGroup: true, memberIds: row.member_ids || []};
+  }
+
+  async function loadGroups(){
+    try{
+      const data = await apiGet('groups?user_id='+me.id);
+      groups = data.map(rowToGroup);
+    }catch(err){
+      console.error(err);
+      groups = [];
+    }
   }
 
   async function registerUser(name, avatar){
@@ -1264,15 +1339,17 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
   });
 
   // ---------- USER LIST ----------
-  function lastMsgPreview(otherId){
-    return lastPreview[otherId] || {text:'התחל/י שיחה', time:''};
+  function lastMsgPreview(key){
+    return lastPreview[key] || {text:'התחל/י שיחה', time:''};
   }
 
   function renderUserList(filter){
     const list = document.getElementById('contactList');
     list.innerHTML = '';
-    const q = (filter||'').trim();
-    const shown = users.filter(u => !q || u.name.includes(q));
+    const q = (filter ?? document.getElementById('searchInput').value).trim();
+    // groups first (most recent activity on top), then users
+    const sortedGroups = [...groups].sort((a,b)=> (lastPreview[chatKey(b)]?.ts||0) - (lastPreview[chatKey(a)]?.ts||0));
+    const shown = [...sortedGroups, ...users].filter(c => !q || c.name.includes(q));
     if(shown.length===0){
       list.innerHTML = `<div class="empty-state">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
@@ -1281,14 +1358,15 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
       return;
     }
     shown.forEach(u=>{
-      const prev = lastMsgPreview(u.id);
-      const count = unread[u.id]||0;
+      const key = chatKey(u);
+      const prev = lastMsgPreview(key);
+      const count = unread[key]||0;
       const row = document.createElement('div');
       row.className = 'contact-row' + (count>0 ? ' unread':'');
       row.innerHTML = `
-        <div class="avatar">${avatarInner(u)}<span class="dot"></span></div>
+        <div class="avatar">${avatarInner(u)}${u.isGroup ? '' : '<span class="dot"></span>'}</div>
         <div class="contact-info">
-          <div class="contact-name">${escapeHtml(u.name)}</div>
+          <div class="contact-name">${u.isGroup ? '👥 ' : ''}${escapeHtml(u.name)}</div>
           <div class="contact-preview">${escapeHtml(prev.text)}</div>
         </div>
         <div class="contact-meta">
@@ -1372,17 +1450,28 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
   }
 
   // ---------- CHAT SCREEN ----------
+  function groupMembers(g){
+    return g.memberIds.map(userById).filter(Boolean);
+  }
+
+  function groupStatusText(g){
+    return groupMembers(g).map(u=> u.id===me.id ? 'את/ה' : u.name).join(', ');
+  }
+
   async function openChat(u){
     currentChat = u;
     document.getElementById('chatAvatar').innerHTML = avatarInner(u);
     document.getElementById('chatName').textContent = u.name;
-    document.getElementById('chatStatus').textContent = 'מחובר/ת';
+    document.getElementById('chatStatus').textContent = u.isGroup ? groupStatusText(u) : 'מחובר/ת';
+    // calls are 1:1 only
+    document.getElementById('btnVideoCall').style.display = u.isGroup ? 'none' : '';
+    document.getElementById('btnVoiceCall').style.display = u.isGroup ? 'none' : '';
     document.getElementById('messages').innerHTML = '<div class="day-divider">טוען הודעות...</div>';
     document.getElementById('messages').style.backgroundImage = '';
     document.getElementById('chatScreen').classList.add('open');
-    await fetchMessages(u.id);
+    await fetchMessages(u);
     renderMessages();
-    markRead(u.id);
+    markRead(chatKey(u));
   }
 
   document.getElementById('btnBack').addEventListener('click', ()=>{
@@ -1394,7 +1483,8 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
   function renderContactInfo(u){
     const body = document.getElementById('contactInfoBody');
 
-    const msgs = messagesCache[u.id] || [];
+    document.getElementById('contactInfoTitle').textContent = u.isGroup ? 'פרטי קבוצה' : 'פרטי משתמש';
+    const msgs = messagesCache[chatKey(u)] || [];
     const fileMsgs = msgs.filter(m=> m.type==='file' && m.fileData);
     const images = fileMsgs.filter(m=> (m.mimeType||'').startsWith('image/'));
     const otherFiles = fileMsgs.filter(m=> !(m.mimeType||'').startsWith('image/'));
@@ -1421,6 +1511,36 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
     const noSharedHtml = (!images.length && !otherFiles.length)
       ? `<div class="info-section"><div class="info-section-title">קבצים ומדיה</div><div class="info-empty">עדיין לא שותפו קבצים בשיחה הזו</div></div>`
       : '';
+
+    if(u.isGroup){
+      const members = groupMembers(u);
+      body.innerHTML = `
+        <div class="info-header">
+          <div class="info-avatar">${avatarInner(u)}</div>
+          <div class="info-name">${escapeHtml(u.name)}</div>
+          <div class="info-status">${members.length} משתתפים</div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">משתתפים</div>
+          ${members.map(m=>`
+            <div class="info-member-row">
+              <div class="avatar">${avatarInner(m)}</div>
+              <div class="su-name">${escapeHtml(m.name)}</div>
+              ${m.id===me.id ? '<span class="me-tag">את/ה</span>' : ''}
+            </div>`).join('')}
+          <button type="button" class="gallery-btn" id="infoAddMembers" style="margin-top:10px;">➕ הוספת משתתפים</button>
+        </div>
+        ${mediaHtml}
+        ${filesHtml}
+        ${noSharedHtml}
+        <div class="info-section">
+          <button type="button" class="info-leave-btn" id="infoLeaveGroup">יציאה מהקבוצה</button>
+        </div>
+      `;
+      document.getElementById('infoAddMembers').addEventListener('click', ()=> openGroupModal(u));
+      document.getElementById('infoLeaveGroup').addEventListener('click', ()=> leaveGroup(u));
+      return;
+    }
 
     body.innerHTML = `
       <div class="info-header">
@@ -1465,13 +1585,123 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
     document.getElementById('contactInfoScreen').classList.remove('open');
   });
 
+  // ---------- GROUPS ----------
+  // One sheet for both "new group" (editingGroup = null) and "add members" (editingGroup = the group).
+  let editingGroup = null;
+  let pickedMemberIds = new Set();
+
+  function renderMemberPicker(){
+    const wrap = document.getElementById('groupMemberList');
+    const existing = new Set(editingGroup ? editingGroup.memberIds : []);
+    const candidates = users.filter(u=> !existing.has(u.id));
+    if(!candidates.length){
+      wrap.innerHTML = `<div class="switch-user-empty">${editingGroup ? 'כל המשתמשים כבר בקבוצה' : 'אין משתמשים אחרים להוספה'}</div>`;
+      return;
+    }
+    wrap.innerHTML = '';
+    candidates.forEach(u=>{
+      const row = document.createElement('div');
+      row.className = 'member-pick-row' + (pickedMemberIds.has(u.id) ? ' selected' : '');
+      row.innerHTML = `
+        <div class="avatar">${avatarInner(u)}</div>
+        <div class="su-name">${escapeHtml(u.name)}</div>
+        <span class="shop-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span>`;
+      row.addEventListener('click', ()=>{
+        if(pickedMemberIds.has(u.id)) pickedMemberIds.delete(u.id);
+        else pickedMemberIds.add(u.id);
+        row.classList.toggle('selected', pickedMemberIds.has(u.id));
+      });
+      wrap.appendChild(row);
+    });
+  }
+
+  function openGroupModal(group){
+    editingGroup = group || null;
+    pickedMemberIds = new Set();
+    document.getElementById('groupModalTitle').textContent = editingGroup ? 'הוספת משתתפים' : 'קבוצה חדשה';
+    document.getElementById('groupConfirm').textContent = editingGroup ? 'הוספה' : 'יצירה';
+    const nameEl = document.getElementById('groupName');
+    nameEl.style.display = editingGroup ? 'none' : '';
+    nameEl.value = '';
+    renderMemberPicker();
+    document.getElementById('groupModal').classList.add('show');
+  }
+
+  function closeGroupModal(){
+    document.getElementById('groupModal').classList.remove('show');
+    editingGroup = null;
+  }
+
+  async function submitGroupModal(){
+    const ids = [...pickedMemberIds];
+    if(editingGroup){
+      if(!ids.length){ closeGroupModal(); return; }
+      let row;
+      try{
+        row = await apiPatch('groups', {id: editingGroup.id, user_id: me.id, add_member_ids: ids});
+      }catch(err){
+        console.error(err);
+        alert('שגיאה בהוספת משתתפים - בדוק/י את חיבור ה-DB');
+        return;
+      }
+      editingGroup.memberIds = row.member_ids;
+      const group = editingGroup;
+      closeGroupModal();
+      if(currentChat && chatKey(currentChat)===chatKey(group)){
+        document.getElementById('chatStatus').textContent = groupStatusText(group);
+        renderContactInfo(group);
+      }
+      return;
+    }
+    const name = document.getElementById('groupName').value.trim();
+    if(!name){ alert('צריך לתת שם לקבוצה.'); return; }
+    if(!ids.length){ alert('צריך לבחור לפחות משתתף/ת אחד/ת.'); return; }
+    let row;
+    try{
+      row = await apiPost('groups', {name, created_by: me.id, member_ids: ids});
+    }catch(err){
+      console.error(err);
+      alert('שגיאה ביצירת הקבוצה - בדוק/י את חיבור ה-DB');
+      return;
+    }
+    const group = rowToGroup(row);
+    groups.unshift(group);
+    closeGroupModal();
+    renderUserList();
+    openChat(group);
+  }
+
+  async function leaveGroup(g){
+    if(!confirm('לצאת מהקבוצה "'+g.name+'"?')) return;
+    try{
+      await apiDelete('groups?id='+g.id+'&user_id='+me.id);
+    }catch(err){
+      console.error(err);
+      alert('שגיאה ביציאה מהקבוצה - בדוק/י את חיבור ה-DB');
+      return;
+    }
+    const key = chatKey(g);
+    groups = groups.filter(x=> x.id!==g.id);
+    delete messagesCache[key];
+    delete lastPreview[key];
+    markRead(key);
+    currentChat = null;
+    document.getElementById('contactInfoScreen').classList.remove('open');
+    document.getElementById('chatScreen').classList.remove('open');
+    renderUserList();
+  }
+
+  document.getElementById('btnNewGroup').addEventListener('click', ()=> openGroupModal(null));
+  document.getElementById('groupCancel').addEventListener('click', closeGroupModal);
+  document.getElementById('groupConfirm').addEventListener('click', submitGroupModal);
+
   // ---------- CHAT BACKGROUND ----------
   // Per-device only (not persisted to the DB — it's not tied to a "contact" row anymore).
   const chatBackgrounds = JSON.parse(localStorage.getItem('parliament_chat_bgs') || '{}');
   function saveChatBackgrounds(){ localStorage.setItem('parliament_chat_bgs', JSON.stringify(chatBackgrounds)); }
   function applyChatBackground(u){
     const el = document.getElementById('messages');
-    const bg = chatBackgrounds[u.id];
+    const bg = chatBackgrounds[chatKey(u)];
     el.style.backgroundImage = bg ? `url(${bg})` : '';
   }
 
@@ -1481,8 +1711,8 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
     bgLongPressed = false;
     bgPressTimer = setTimeout(()=>{
       bgLongPressed = true;
-      if(currentChat && chatBackgrounds[currentChat.id] && confirm('להסיר את רקע השיחה?')){
-        delete chatBackgrounds[currentChat.id];
+      if(currentChat && chatBackgrounds[chatKey(currentChat)] && confirm('להסיר את רקע השיחה?')){
+        delete chatBackgrounds[chatKey(currentChat)];
         saveChatBackgrounds();
         applyChatBackground(currentChat);
       }
@@ -1502,7 +1732,7 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
     if(!file || !currentChat) return;
     try{
       const bgData = await compressImageFile(file, 900, 0.75);
-      chatBackgrounds[currentChat.id] = bgData;
+      chatBackgrounds[chatKey(currentChat)] = bgData;
       saveChatBackgrounds();
       applyChatBackground(currentChat);
     }catch(err){
@@ -1767,8 +1997,8 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
   let allFilesView = 'list'; // 'list' | 'folder'
 
   function computeSentFolders(){
-    return users.map(u=>{
-      const msgs = messagesCache[u.id] || [];
+    return [...groups, ...users].map(u=>{
+      const msgs = messagesCache[chatKey(u)] || [];
       const files = msgs.filter(m=> m.from==='me' && m.type==='file' && m.fileData);
       return {user:u, files};
     }).filter(f=> f.files.length>0);
@@ -1911,7 +2141,7 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
   function renderMessages(){
     const wrap = document.getElementById('messages');
     wrap.innerHTML = '';
-    const msgs = messagesCache[currentChat.id] || [];
+    const msgs = messagesCache[chatKey(currentChat)] || [];
     let lastDay = null;
     msgs.forEach(m=>{
       const day = new Date(m.ts).toDateString();
@@ -1996,7 +2226,12 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
     } else {
       bubbleHtml = `<div class="bubble">${escapeHtml(m.text)}<span class="time">${fmtTime(m.ts)}</span></div>`;
     }
-    row.innerHTML = `<div class="bubble-col">${bubbleHtml}</div>`;
+    let senderLabel = '';
+    if(currentChat && currentChat.isGroup && !mine){
+      const sender = userById(m.senderId);
+      senderLabel = `<div class="sender-label">${escapeHtml(sender ? sender.name : '?')}</div>`;
+    }
+    row.innerHTML = `<div class="bubble-col">${senderLabel}${bubbleHtml}</div>`;
     if(m.type==='voice' && m.audio){
       const btn = row.querySelector('.voice-play');
       btn.addEventListener('click', ()=>{
@@ -2008,7 +2243,7 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
     if(delBtnEl){
       delBtnEl.addEventListener('click', (e)=>{
         e.preventDefault(); e.stopPropagation();
-        deleteMessage(currentChat.id, m);
+        deleteMessage(currentChat, m);
       });
     }
     return row;
@@ -2017,29 +2252,30 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
 
   async function addMessage(payload){
     const target = currentChat;
+    const key = chatKey(target);
     const optimistic = {
-      from:'me', senderId: me.id, recipientId: target.id, type:payload.type, text:payload.text, audio:payload.audio, duration:payload.duration,
+      from:'me', senderId: me.id, recipientId: target.isGroup ? null : target.id, type:payload.type, text:payload.text, audio:payload.audio, duration:payload.duration,
       fileName:payload.fileName, fileSize:payload.fileSize, mimeType:payload.mimeType, fileData:payload.fileData,
       ts: Date.now()
     };
-    if(!messagesCache[target.id]) messagesCache[target.id] = [];
-    messagesCache[target.id].push(optimistic);
-    lastPreview[target.id] = {text: msgPreviewText(optimistic), time: fmtTime(optimistic.ts), ts: optimistic.ts};
+    if(!messagesCache[key]) messagesCache[key] = [];
+    messagesCache[key].push(optimistic);
+    lastPreview[key] = {text: previewFor(target, optimistic), time: fmtTime(optimistic.ts), ts: optimistic.ts};
     renderMessages();
-    const saved = await insertMessage(target.id, payload);
+    const saved = await insertMessage(target, payload);
     if(saved && saved.id!=null){
       optimistic.id = saved.id;
       renderMessages();
     } else {
       // persistence failed - remove the optimistic bubble so it doesn't look like it sent
-      const arr = messagesCache[target.id] || [];
+      const arr = messagesCache[key] || [];
       const idx = arr.indexOf(optimistic);
       if(idx>-1) arr.splice(idx,1);
       if(arr.length){
         const last = arr[arr.length-1];
-        lastPreview[target.id] = {text: msgPreviewText(last), time: fmtTime(last.ts), ts:last.ts};
+        lastPreview[key] = {text: previewFor(target, last), time: fmtTime(last.ts), ts:last.ts};
       } else {
-        delete lastPreview[target.id];
+        delete lastPreview[key];
       }
       renderMessages();
       renderUserList();
@@ -2279,6 +2515,8 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
     document.getElementById('shoppingScreen').classList.remove('open');
     document.getElementById('allFilesScreen').classList.remove('open');
     shopDate = null; shopSummary = {};
+    groups = [];
+    closeGroupModal();
     document.getElementById('myProfileModal').classList.remove('show');
 
     // unread counters belong to the previous user

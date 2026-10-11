@@ -59,5 +59,31 @@ create table if not exists shopping_items (
 
 create index if not exists shopping_items_user_date_idx on shopping_items (user_id, list_date, created_at);
 
+-- Group chats. A message targets either one user (recipient_id) or one group (group_id).
+create table if not exists chat_groups (
+  id          serial primary key,
+  name        text not null,
+  avatar      text,               -- data URL or null
+  created_by  integer references users(id) on delete set null,
+  created_at  timestamptz not null default now()
+);
+
+create table if not exists group_members (
+  group_id   integer not null references chat_groups(id) on delete cascade,
+  user_id    integer not null references users(id) on delete cascade,
+  joined_at  timestamptz not null default now(),
+  primary key (group_id, user_id)
+);
+
+create index if not exists group_members_user_idx on group_members (user_id);
+
+alter table messages add column if not exists group_id integer references chat_groups(id) on delete cascade;
+alter table messages alter column recipient_id drop not null;
+do $$ begin
+  alter table messages add constraint messages_target_chk check ((recipient_id is null) <> (group_id is null));
+exception when duplicate_object then null;
+end $$;
+create index if not exists messages_group_idx on messages (group_id, created_at) where group_id is not null;
+
 -- The serverless functions connect directly with the Neon connection string; no RLS needed
 -- (this is a small friends app, same trust model as before).

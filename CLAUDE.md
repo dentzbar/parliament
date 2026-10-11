@@ -1,6 +1,6 @@
 # CLAUDE.md — parliament
 
-צ'אט בין חברים (Hebrew, RTL) — strictly user-to-user chat (no contacts/groups/businesses): pick or create a user on entry, message any other user directly, share text/voice/file messages, and browse a showcase feed. Vanilla single-file frontend + Vercel serverless backend.
+צ'אט בין חברים (Hebrew, RTL) — user-to-user chat plus user groups (no contacts/businesses): pick or create a user on entry, message any other user directly or create a group of users, share text/voice/file messages, and browse a showcase feed. Vanilla single-file frontend + Vercel serverless backend.
 
 ## Git & GitHub
 
@@ -25,9 +25,10 @@
 ## Architecture
 
 - **Frontend:** everything in [index.html](index.html) — HTML + inline CSS + vanilla JS, no build step. Hebrew, RTL.
-- **Backend:** [api/users.js](api/users.js) (user directory: list/create/rename+avatar), [api/messages.js](api/messages.js) (direct messages between two users: text/voice/file), [api/showcase.js](api/showcase.js) (community showcase feed), [api/db.js](api/db.js) (Neon client).
-- **DB schema:** [schema.sql](schema.sql) — `users`, `messages`, `showcase`. Migrations are `alter ... if not exists` appended to the same file; run against Neon manually.
-- **No "contacts" table.** Chat is strictly user-to-user: `messages` rows have `sender_id`/`recipient_id` pointing straight at `users`. On entry (no `me` in localStorage) the onboarding screen lists every existing user to pick from, or a name field to create a new one.
+- **Backend:** [api/users.js](api/users.js) (user directory: list/create/rename+avatar), [api/messages.js](api/messages.js) (direct or group messages: text/voice/file), [api/groups.js](api/groups.js) (list/create/add-members/leave groups), [api/showcase.js](api/showcase.js) (community showcase feed), [api/db.js](api/db.js) (Neon client).
+- **DB schema:** [schema.sql](schema.sql) — `users`, `messages`, `chat_groups`, `group_members`, `showcase`, `shopping_items`. Migrations are `alter ... if not exists` appended to the same file; run against Neon manually.
+- **No "contacts" table.** `messages` rows have `sender_id` plus exactly one of `recipient_id` (DM, points straight at `users`) or `group_id` (group chat) — enforced by `messages_target_chk`.
+- **Frontend chat keys:** per-chat state (`messagesCache`, `lastPreview`, `unread`, chat backgrounds) is keyed by `chatKey()` — bare user id for DMs, `'g'+id` for groups. Users keep the bare id so existing localStorage entries stay valid. On entry (no `me` in localStorage) the onboarding screen lists every existing user to pick from, or a name field to create a new one.
 - **No realtime channel** (Neon has none browser-safe): the open chat thread and the user-list previews are refreshed by polling (`setInterval`) instead of a websocket subscription.
 - Voice/image/file messages are stored as base64 data URLs directly in Postgres columns (no object storage) — keep an eye on row size / Neon storage if this app gets heavy use.
 - No canned auto-replies — messages only come from what real users actually send.
