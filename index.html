@@ -826,7 +826,19 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
   <div id="groupModal">
     <div class="sheet">
       <h2 id="groupModalTitle">קבוצה חדשה</h2>
-      <input id="groupName" type="text" placeholder="שם הקבוצה" maxlength="40">
+      <div id="groupCreateFields">
+        <input id="groupAvatarFile" type="file" accept="image/*" class="visually-hidden-input">
+        <div id="groupAvatarPreviewWrap" class="img-preview-wrap round" style="display:none;">
+          <img id="groupAvatarPreview" alt="תצוגה מקדימה">
+          <button type="button" id="groupAvatarRemove" class="img-preview-remove">✕</button>
+        </div>
+        <button type="button" id="groupAvatarBtn" class="gallery-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="9" r="1.7"/><path d="M21 15l-5-5-9 9"/></svg>
+          <span>תמונה לקבוצה</span>
+        </button>
+        <input id="groupName" type="text" placeholder="שם הקבוצה" maxlength="40">
+      </div>
+      <input id="groupInfoAvatarFile" type="file" accept="image/*" class="visually-hidden-input">
       <div id="groupMemberList" class="member-pick-list"></div>
       <div class="sheet-buttons">
         <button class="cancel" id="groupCancel">ביטול</button>
@@ -1516,9 +1528,19 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
       const members = groupMembers(u);
       body.innerHTML = `
         <div class="info-header">
-          <div class="info-avatar">${avatarInner(u)}</div>
+          <div class="info-avatar" id="infoGroupAvatar" style="cursor:pointer;" title="שינוי תמונה">${avatarInner(u)}</div>
           <div class="info-name">${escapeHtml(u.name)}</div>
           <div class="info-status">${members.length} משתתפים</div>
+          <div class="info-actions">
+            <button class="info-action-btn" id="infoGroupAvatarChange">
+              <span class="circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="9" r="1.7"/><path d="M21 15l-5-5-9 9"/></svg></span>
+              ${u.avatar ? 'שינוי תמונה' : 'הוספת תמונה'}
+            </button>
+            ${u.avatar ? `<button class="info-action-btn" id="infoGroupAvatarRemove">
+              <span class="circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></span>
+              הסרת תמונה
+            </button>` : ''}
+          </div>
         </div>
         <div class="info-section">
           <div class="info-section-title">משתתפים</div>
@@ -1537,6 +1559,13 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
           <button type="button" class="info-leave-btn" id="infoLeaveGroup">יציאה מהקבוצה</button>
         </div>
       `;
+      const pickGroupAvatar = ()=> document.getElementById('groupInfoAvatarFile').click();
+      document.getElementById('infoGroupAvatar').addEventListener('click', pickGroupAvatar);
+      document.getElementById('infoGroupAvatarChange').addEventListener('click', pickGroupAvatar);
+      const removeBtn = document.getElementById('infoGroupAvatarRemove');
+      if(removeBtn) removeBtn.addEventListener('click', ()=>{
+        if(confirm('להסיר את תמונת הקבוצה?')) updateGroupAvatar(u, null);
+      });
       document.getElementById('infoAddMembers').addEventListener('click', ()=> openGroupModal(u));
       document.getElementById('infoLeaveGroup').addEventListener('click', ()=> leaveGroup(u));
       return;
@@ -1620,9 +1649,9 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
     pickedMemberIds = new Set();
     document.getElementById('groupModalTitle').textContent = editingGroup ? 'הוספת משתתפים' : 'קבוצה חדשה';
     document.getElementById('groupConfirm').textContent = editingGroup ? 'הוספה' : 'יצירה';
-    const nameEl = document.getElementById('groupName');
-    nameEl.style.display = editingGroup ? 'none' : '';
-    nameEl.value = '';
+    document.getElementById('groupCreateFields').style.display = editingGroup ? 'none' : '';
+    document.getElementById('groupName').value = '';
+    groupAvatarPicker.reset(null);
     renderMemberPicker();
     document.getElementById('groupModal').classList.add('show');
   }
@@ -1658,7 +1687,7 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
     if(!ids.length){ alert('צריך לבחור לפחות משתתף/ת אחד/ת.'); return; }
     let row;
     try{
-      row = await apiPost('groups', {name, created_by: me.id, member_ids: ids});
+      row = await apiPost('groups', {name, avatar: groupAvatarPicker.getData(), created_by: me.id, member_ids: ids});
     }catch(err){
       console.error(err);
       alert('שגיאה ביצירת הקבוצה - בדוק/י את חיבור ה-DB');
@@ -1670,6 +1699,39 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
     renderUserList();
     openChat(group);
   }
+
+  const groupAvatarPicker = setupImagePicker('groupAvatarFile','groupAvatarBtn','groupAvatarPreviewWrap','groupAvatarPreview','groupAvatarRemove');
+
+  async function updateGroupAvatar(g, avatar){
+    try{
+      await apiPatch('groups', {id: g.id, user_id: me.id, avatar});
+    }catch(err){
+      console.error(err);
+      alert('שגיאה בשמירת התמונה - בדוק/י את חיבור ה-DB');
+      return;
+    }
+    g.avatar = avatar;
+    if(currentChat && chatKey(currentChat)===chatKey(g)){
+      document.getElementById('chatAvatar').innerHTML = avatarInner(g);
+    }
+    renderContactInfo(g);
+    renderUserList();
+  }
+
+  document.getElementById('groupInfoAvatarFile').addEventListener('change', async (e)=>{
+    const file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if(!file || !currentChat || !currentChat.isGroup) return;
+    let data;
+    try{
+      data = await compressImageFile(file, 400, 0.75);
+    }catch(err){
+      console.error(err);
+      alert('שגיאה בעיבוד התמונה. נסה/י תמונה אחרת.');
+      return;
+    }
+    await updateGroupAvatar(currentChat, data);
+  });
 
   async function leaveGroup(g){
     if(!confirm('לצאת מהקבוצה "'+g.name+'"?')) return;
