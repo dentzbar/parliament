@@ -531,6 +531,7 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
 .sheet-buttons button{flex:1; padding:13px; border-radius:13px; border:none; font-family:var(--font-display); font-weight:600; font-size:14px; cursor:pointer;}
 .sheet-buttons .cancel{background:var(--panel2); color:var(--text-dim);}
 .sheet-buttons .confirm{background:linear-gradient(135deg,var(--red-bright),var(--red)); color:#fff;}
+.sheet-buttons .confirm:disabled{opacity:.45; cursor:default;}
 
 .gallery-btn{
   width:100%; display:flex; align-items:center; justify-content:center; gap:8px;
@@ -841,6 +842,7 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
       <div id="forwardList" class="member-pick-list"></div>
       <div class="sheet-buttons">
         <button class="cancel" id="fwdCancel">ביטול</button>
+        <button class="confirm" id="fwdSend" disabled>שלח</button>
       </div>
     </div>
   </div>
@@ -2394,6 +2396,7 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
 
   // ---------- FORWARD ----------
   let forwardMsg = null;
+  const forwardSelected = new Set(); // chats picked as forward targets
 
   // a touch anywhere else hides a long-press-revealed forward button
   document.addEventListener('touchstart', e=>{
@@ -2404,17 +2407,30 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
 
   function openForward(m){
     forwardMsg = m;
+    forwardSelected.clear();
+    updateForwardSend();
     const list = document.getElementById('forwardList');
     list.innerHTML = '';
     [...groups, ...users].forEach(c=>{
       const row = document.createElement('div');
       row.className = 'member-pick-row';
       row.innerHTML = `<div class="avatar">${avatarInner(c)}</div>
-        <div class="su-name">${c.isGroup ? '👥 ' : ''}${escapeHtml(c.name)}</div>`;
-      row.addEventListener('click', ()=> forwardTo(c));
+        <div class="su-name">${c.isGroup ? '👥 ' : ''}${escapeHtml(c.name)}</div>
+        <span class="shop-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span>`;
+      row.addEventListener('click', ()=>{
+        if(forwardSelected.has(c)) forwardSelected.delete(c); else forwardSelected.add(c);
+        row.classList.toggle('selected', forwardSelected.has(c));
+        updateForwardSend();
+      });
       list.appendChild(row);
     });
     document.getElementById('forwardModal').classList.add('show');
+  }
+
+  function updateForwardSend(){
+    const btn = document.getElementById('fwdSend');
+    btn.disabled = forwardSelected.size===0;
+    btn.textContent = forwardSelected.size ? `שלח (${forwardSelected.size})` : 'שלח';
   }
 
   function closeForward(){
@@ -2422,9 +2438,10 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
     forwardMsg = null;
   }
 
-  function forwardTo(target){
+  function forwardToSelected(){
     const m = forwardMsg;
-    if(!m) return;
+    const targets = [...forwardSelected];
+    if(!m || !targets.length) return;
     closeForward();
     const payload = {type: m.type};
     if(m.type==='voice'){ payload.audio = m.audio; payload.duration = m.duration; }
@@ -2432,10 +2449,11 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
       payload.fileName = m.fileName; payload.fileSize = m.fileSize;
       payload.mimeType = m.mimeType; payload.fileData = m.fileData;
     } else { payload.text = m.text; }
-    addMessage(payload, target);
+    targets.forEach(t=> addMessage(payload, t));
   }
 
   document.getElementById('fwdCancel').addEventListener('click', closeForward);
+  document.getElementById('fwdSend').addEventListener('click', forwardToSelected);
   document.getElementById('forwardModal').addEventListener('click', e=>{
     if(e.target.id==='forwardModal') closeForward();
   });
