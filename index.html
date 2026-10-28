@@ -351,6 +351,18 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
   display:flex; align-items:center; justify-content:center; padding:0;
 }
 .msg-delete-btn svg{width:12px; height:12px;}
+.msg-fwd-btn{
+  position:absolute; top:-8px; right:-8px; z-index:3; width:24px; height:24px; border-radius:50%;
+  background:var(--panel2); border:2px solid var(--bg); color:var(--text); cursor:pointer;
+  display:flex; align-items:center; justify-content:center; padding:0;
+}
+.msg-fwd-btn svg{width:12px; height:12px;}
+/* hidden by default: shown on hover (mouse) or after a long press (touch) */
+.msg-fwd-btn, .msg-delete-btn{opacity:0; pointer-events:none; transition:opacity .15s;}
+@media (hover:hover){ .bubble:hover .msg-fwd-btn, .bubble:hover .msg-delete-btn{opacity:1; pointer-events:auto;} }
+.msg-row.show-actions .msg-fwd-btn, .msg-row.show-actions .msg-delete-btn{opacity:1; pointer-events:auto;}
+/* image/video bubbles: buttons always visible */
+.file-bubble-img .msg-fwd-btn, .file-bubble-img .msg-delete-btn{opacity:1; pointer-events:auto;}
 
 .day-divider{align-self:center; font-size:11px; color:var(--text-faint); background:var(--panel); padding:4px 12px; border-radius:10px; margin:10px 0;}
 
@@ -465,10 +477,10 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
 .call-btn.active{background:#fff; color:#a80000;}
 
 /* ---------- MODALS (SHEETS) ---------- */
-#shareWorkModal, #myProfileModal, #groupModal{
+#shareWorkModal, #myProfileModal, #groupModal, #forwardModal{
   position:absolute; inset:0; z-index:55; display:none; align-items:flex-end; background:rgba(0,0,0,.55);
 }
-#shareWorkModal.show, #myProfileModal.show, #groupModal.show{display:flex;}
+#shareWorkModal.show, #myProfileModal.show, #groupModal.show, #forwardModal.show{display:flex;}
 .member-pick-list{max-height:240px; overflow-y:auto; display:flex; flex-direction:column; gap:6px; margin-bottom:10px;}
 .member-pick-row{
   display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:12px;
@@ -818,6 +830,17 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
       <div class="sheet-buttons">
         <button class="cancel" id="swCancel">ביטול</button>
         <button class="confirm" id="swConfirm">שיתוף</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORWARD MODAL -->
+  <div id="forwardModal">
+    <div class="sheet">
+      <h2>העברה אל...</h2>
+      <div id="forwardList" class="member-pick-list"></div>
+      <div class="sheet-buttons">
+        <button class="cancel" id="fwdCancel">ביטול</button>
       </div>
     </div>
   </div>
@@ -2231,6 +2254,8 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
     return '📎';
   }
 
+  const FWD_BTN_HTML = '<button class="msg-fwd-btn" title="העבר"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4l6 6-6 6"/><path d="M21 10H9a6 6 0 0 0-6 6v3"/></svg></button>';
+
   function renderBubble(m){
     const row = document.createElement('div');
     const mine = m.from==='me';
@@ -2288,6 +2313,8 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
     } else {
       bubbleHtml = `<div class="bubble">${escapeHtml(m.text)}<span class="time">${fmtTime(m.ts)}</span></div>`;
     }
+    // forward button on every bubble (sits opposite the delete button)
+    bubbleHtml = bubbleHtml.replace(/(<div class="bubble[^"]*">)/, `$1${FWD_BTN_HTML}`);
     let senderLabel = '';
     if(currentChat && currentChat.isGroup && !mine){
       const sender = userById(m.senderId);
@@ -2301,6 +2328,27 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
         audio.play();
       });
     }
+    // long press (touch) reveals the forward button
+    let pressTimer = null, pressFired = false;
+    const cancelPress = ()=>{ clearTimeout(pressTimer); pressTimer = null; };
+    row.addEventListener('touchstart', ()=>{
+      pressFired = false;
+      cancelPress();
+      pressTimer = setTimeout(()=>{
+        pressFired = true;
+        document.querySelectorAll('.msg-row.show-actions').forEach(r=> r.classList.remove('show-actions'));
+        row.classList.add('show-actions');
+      }, 450);
+    }, {passive:true});
+    ['touchmove','touchend','touchcancel'].forEach(ev=> row.addEventListener(ev, cancelPress, {passive:true}));
+    row.addEventListener('contextmenu', e=>{ if(pressFired) e.preventDefault(); });
+    const fwdBtnEl = row.querySelector('.msg-fwd-btn');
+    if(fwdBtnEl){
+      fwdBtnEl.addEventListener('click', (e)=>{
+        e.preventDefault(); e.stopPropagation();
+        openForward(m);
+      });
+    }
     const delBtnEl = row.querySelector('.msg-delete-btn');
     if(delBtnEl){
       delBtnEl.addEventListener('click', (e)=>{
@@ -2312,9 +2360,9 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
   }
 
 
-  async function addMessage(payload){
-    const target = currentChat;
+  async function addMessage(payload, target = currentChat){
     const key = chatKey(target);
+    const isOpen = target === currentChat;
     const optimistic = {
       from:'me', senderId: me.id, recipientId: target.isGroup ? null : target.id, type:payload.type, text:payload.text, audio:payload.audio, duration:payload.duration,
       fileName:payload.fileName, fileSize:payload.fileSize, mimeType:payload.mimeType, fileData:payload.fileData,
@@ -2323,11 +2371,11 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
     if(!messagesCache[key]) messagesCache[key] = [];
     messagesCache[key].push(optimistic);
     lastPreview[key] = {text: previewFor(target, optimistic), time: fmtTime(optimistic.ts), ts: optimistic.ts};
-    renderMessages();
+    if(isOpen) renderMessages(); else renderUserList();
     const saved = await insertMessage(target, payload);
     if(saved && saved.id!=null){
       optimistic.id = saved.id;
-      renderMessages();
+      if(currentChat === target) renderMessages();
     } else {
       // persistence failed - remove the optimistic bubble so it doesn't look like it sent
       const arr = messagesCache[key] || [];
@@ -2339,10 +2387,58 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
       } else {
         delete lastPreview[key];
       }
-      renderMessages();
+      if(currentChat === target) renderMessages();
       renderUserList();
     }
   }
+
+  // ---------- FORWARD ----------
+  let forwardMsg = null;
+
+  // a touch anywhere else hides a long-press-revealed forward button
+  document.addEventListener('touchstart', e=>{
+    if(e.target.closest('.msg-fwd-btn, .msg-delete-btn')) return;
+    const keep = e.target.closest('.msg-row.show-actions');
+    document.querySelectorAll('.msg-row.show-actions').forEach(r=>{ if(r!==keep) r.classList.remove('show-actions'); });
+  }, {passive:true});
+
+  function openForward(m){
+    forwardMsg = m;
+    const list = document.getElementById('forwardList');
+    list.innerHTML = '';
+    [...groups, ...users].forEach(c=>{
+      const row = document.createElement('div');
+      row.className = 'member-pick-row';
+      row.innerHTML = `<div class="avatar">${avatarInner(c)}</div>
+        <div class="su-name">${c.isGroup ? '👥 ' : ''}${escapeHtml(c.name)}</div>`;
+      row.addEventListener('click', ()=> forwardTo(c));
+      list.appendChild(row);
+    });
+    document.getElementById('forwardModal').classList.add('show');
+  }
+
+  function closeForward(){
+    document.getElementById('forwardModal').classList.remove('show');
+    forwardMsg = null;
+  }
+
+  function forwardTo(target){
+    const m = forwardMsg;
+    if(!m) return;
+    closeForward();
+    const payload = {type: m.type};
+    if(m.type==='voice'){ payload.audio = m.audio; payload.duration = m.duration; }
+    else if(m.type==='file'){
+      payload.fileName = m.fileName; payload.fileSize = m.fileSize;
+      payload.mimeType = m.mimeType; payload.fileData = m.fileData;
+    } else { payload.text = m.text; }
+    addMessage(payload, target);
+  }
+
+  document.getElementById('fwdCancel').addEventListener('click', closeForward);
+  document.getElementById('forwardModal').addEventListener('click', e=>{
+    if(e.target.id==='forwardModal') closeForward();
+  });
 
   // ---------- TEXT INPUT ----------
 
