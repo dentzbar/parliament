@@ -840,6 +840,7 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
     <div class="sheet">
       <h2>העברה אל...</h2>
       <div id="forwardList" class="member-pick-list"></div>
+      <input id="forwardNote" type="text" placeholder="הוסף/י הערה (לא חובה)..." maxlength="500">
       <div class="sheet-buttons">
         <button class="cancel" id="fwdCancel">ביטול</button>
         <button class="confirm" id="fwdSend" disabled>שלח</button>
@@ -2408,6 +2409,7 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
   function openForward(m){
     forwardMsg = m;
     forwardSelected.clear();
+    document.getElementById('forwardNote').value = '';
     updateForwardSend();
     const list = document.getElementById('forwardList');
     list.innerHTML = '';
@@ -2438,9 +2440,10 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
     forwardMsg = null;
   }
 
-  function forwardToSelected(){
+  async function forwardToSelected(){
     const m = forwardMsg;
     const targets = [...forwardSelected];
+    const note = document.getElementById('forwardNote').value.trim();
     if(!m || !targets.length) return;
     closeForward();
     const payload = {type: m.type};
@@ -2449,7 +2452,11 @@ html[data-theme="light"] #btnTheme .moon{display:none;}
       payload.fileName = m.fileName; payload.fileSize = m.fileSize;
       payload.mimeType = m.mimeType; payload.fileData = m.fileData;
     } else { payload.text = m.text; }
-    targets.forEach(t=> addMessage(payload, t));
+    // sequential so the note always lands right after the forwarded message
+    for(const t of targets){
+      await addMessage(payload, t);
+      if(note) await addMessage({type:'text', text:note}, t);
+    }
   }
 
   document.getElementById('fwdCancel').addEventListener('click', closeForward);
